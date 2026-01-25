@@ -9,4 +9,7 @@ license.workspace = true
 [dependencies]
 serde = { workspace = true }
 thiserror = { workspace = true }
+fluent = { workspace = true }
+fluent-bundle = { workspace = true }
+unic-langid = { workspace = true }
 

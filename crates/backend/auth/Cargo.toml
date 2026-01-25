@@ -1,0 +1,47 @@
+[package]
+name = "auth"
+description = "Authentication, authorization, RBAC, and audit hooks"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+# Internal crates
+persistence = { workspace = true }
+shared = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+tower = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+async-trait = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Logging/Tracing
+tracing = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Crypto
+sha2 = "0.10"
+hex = "0.4"
+rand = "0.8"
+
+# Time
+chrono = "0.4"
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+tempfile = { workspace = true }
+

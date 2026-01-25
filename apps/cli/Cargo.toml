@@ -1,0 +1,21 @@
+[package]
+name = "inventory-cli"
+description = "Inventory management CLI for ops/admin workflows"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "inventory-cli"
+path = "src/main.rs"
+
+[dependencies]
+cli-foundation = { workspace = true }
+cli-db-migrations = { workspace = true }
+shared = { workspace = true }
+clap = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tokio = { workspace = true }
+
