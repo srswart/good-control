@@ -1,0 +1,18 @@
+component:
+  id: integration-ui
+  name: "Integration UI (Kingdee mapping, sync status, errors)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/integrations/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

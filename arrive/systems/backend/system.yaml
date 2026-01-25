@@ -1,0 +1,13 @@
+system:
+  id: backend
+  name: "Backend"
+  description: "Rust backend built on Axum + GraphQL, with SQLx/SQLite persistence and crate-based domain modules."
+  owners:
+    - team: inventory
+
+roots:
+    - "crates/backend/**"
+    - "crates/domain/**"
+    - "crates/integration/**"
+    - "crates/shared/**"
+    - "migrations/**"

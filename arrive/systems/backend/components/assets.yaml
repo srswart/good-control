@@ -1,0 +1,18 @@
+component:
+  id: assets
+  name: "Drone asset registry + configuration control"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/assets/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

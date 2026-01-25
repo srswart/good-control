@@ -1,0 +1,18 @@
+component:
+  id: mro
+  name: "Maintenance/repair/returns (RMA/work orders)"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/mro/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

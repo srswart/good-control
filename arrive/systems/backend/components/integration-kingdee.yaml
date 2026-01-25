@@ -1,0 +1,18 @@
+component:
+  id: integration-kingdee
+  name: "Kingdee Cloud financial integration connector + reconciliation"
+  type: service
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/integration/kingdee/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

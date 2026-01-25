@@ -1,0 +1,18 @@
+component:
+  id: inventory-ui
+  name: "Inventory UI (items, stock, traceability, cycle counts)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/inventory/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

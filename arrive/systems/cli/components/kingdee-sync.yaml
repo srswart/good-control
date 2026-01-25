@@ -1,0 +1,18 @@
+component:
+  id: kingdee-sync
+  name: "Kingdee sync tooling (trigger/retry/reconcile)"
+  type: service
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/cli/kingdee_sync/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

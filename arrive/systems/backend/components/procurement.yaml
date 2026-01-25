@@ -1,0 +1,18 @@
+component:
+  id: procurement
+  name: "Procurement + suppliers + inbound docs"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/procurement/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

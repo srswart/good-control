@@ -1,0 +1,18 @@
+component:
+  id: compliance
+  name: "Jurisdiction rules + approvals + document packs + gating"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/compliance/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

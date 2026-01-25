@@ -1,0 +1,18 @@
+component:
+  id: logistics
+  name: "Logistics + shipment tracking + 3PL abstractions"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/logistics/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

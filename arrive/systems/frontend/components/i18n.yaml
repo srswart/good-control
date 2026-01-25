@@ -1,0 +1,18 @@
+component:
+  id: i18n
+  name: "Frontend i18n (EN+ZH), language switching, fonts, locale formats"
+  type: crosscutting
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/i18n/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

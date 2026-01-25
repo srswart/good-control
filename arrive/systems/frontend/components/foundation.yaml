@@ -1,0 +1,20 @@
+component:
+  id: foundation
+  name: "Frontend Foundation (Dioxus 0.7.x, Tailwind pipeline, desktop packaging)"
+  type: infra
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "apps/desktop/**"
+    - "crates/ui/foundation/**"
+    - "assets/ui/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

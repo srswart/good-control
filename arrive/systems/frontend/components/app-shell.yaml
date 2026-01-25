@@ -1,0 +1,18 @@
+component:
+  id: app-shell
+  name: "App shell (routing, session, navigation, permissions)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/app_shell/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

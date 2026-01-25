@@ -1,0 +1,42 @@
+# ARRIVE Registry - Repo-wide defaults and shared configuration
+registry:
+  repo_id: drone-inventory
+  name: "Industrial Drone Inventory Management"
+  description: "Inventory + WMS + compliance workflow system for industrial drones (EN+ZH), with optional Kingdee Cloud financial integration."
+
+defaults:
+  default_branch: main
+  advance_id_format: "ADV-{COMPONENT}-{SEQ:3}"
+
+vocabulary:
+  stages:
+    - incubating
+    - candidate
+    - resident
+
+  component_types:
+    - service
+    - library
+    - ui-area
+    - infra
+    - data-contract
+    - crosscutting
+
+  risk_flags:
+    - resident_touched
+    - migration
+    - auth
+    - concurrency
+    - caching
+    - public_api
+    - new_dependency
+
+  evidence_types:
+    - ci:passed
+    - tests:unit
+    - tests:integration
+    - tests:e2e
+    - review:owner
+    - docs:updated
+    - tdd:red-green
+    - tidy:preparatory

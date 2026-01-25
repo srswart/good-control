@@ -1,0 +1,18 @@
+component:
+  id: design-system
+  name: "Design system (reusable components, forms, validation)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/design_system/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

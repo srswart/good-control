@@ -1,0 +1,18 @@
+component:
+  id: orders
+  name: "Orders, allocation, fulfillment, backorders"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/orders/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

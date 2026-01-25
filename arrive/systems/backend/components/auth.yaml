@@ -1,0 +1,18 @@
+component:
+  id: auth
+  name: "AuthN/AuthZ + RBAC + audit hooks"
+  type: crosscutting
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/backend/auth/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

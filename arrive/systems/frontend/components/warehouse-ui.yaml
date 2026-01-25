@@ -1,0 +1,19 @@
+component:
+  id: warehouse-ui
+  name: "Warehouse UI (receiving, putaway, pick/pack/ship; scan-first)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/warehouse/**"
+    - "apps/mobile/warehouse/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

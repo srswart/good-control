@@ -1,0 +1,18 @@
+component:
+  id: inventory
+  name: "Inventory ledger, reservations, serial/lot traceability"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/inventory/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

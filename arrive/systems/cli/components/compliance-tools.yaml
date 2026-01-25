@@ -1,0 +1,18 @@
+component:
+  id: compliance-tools
+  name: "Compliance tooling (validate gates, build document packs)"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/cli/compliance_tools/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

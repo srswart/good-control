@@ -1,0 +1,18 @@
+component:
+  id: battery
+  name: "Battery lifecycle (health, cycles, states, retirement)"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/battery/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

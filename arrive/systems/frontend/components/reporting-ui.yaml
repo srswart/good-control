@@ -1,0 +1,18 @@
+component:
+  id: reporting-ui
+  name: "Reporting UI (dashboards, exports)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/reporting/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

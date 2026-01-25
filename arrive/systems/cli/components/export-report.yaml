@@ -1,0 +1,18 @@
+component:
+  id: export-report
+  name: "Export tools (reports, audit extracts, data dumps)"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/cli/export_report/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

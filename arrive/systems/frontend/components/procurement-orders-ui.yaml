@@ -1,0 +1,18 @@
+component:
+  id: procurement-orders-ui
+  name: "Procurement + Orders UI (POs, allocations, fulfillment)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/procurement_orders/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

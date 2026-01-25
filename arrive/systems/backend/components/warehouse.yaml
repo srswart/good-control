@@ -1,0 +1,18 @@
+component:
+  id: warehouse
+  name: "Warehouse operations (receiving/putaway/pick/pack/ship)"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/warehouse/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

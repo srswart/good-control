@@ -1,0 +1,18 @@
+component:
+  id: ops-diagnostics
+  name: "Ops diagnostics (health checks, DB integrity, tracing toggles)"
+  type: crosscutting
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/cli/ops_diagnostics/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

@@ -1,0 +1,10 @@
+system:
+  id: cli
+  name: "CLI"
+  description: "Rust CLI for ops/admin workflows: migrations, imports/exports, compliance checks, and Kingdee sync tooling."
+  owners:
+    - team: inventory
+
+roots:
+    - "apps/cli/**"
+    - "crates/cli/**"

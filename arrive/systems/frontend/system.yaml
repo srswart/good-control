@@ -1,0 +1,12 @@
+system:
+  id: frontend
+  name: "Frontend"
+  description: "Dioxus 0.7.x desktop-first UI with Tailwind, modularized into UI crates; subset targets iOS/Android where needed."
+  owners:
+    - team: inventory
+
+roots:
+    - "apps/desktop/**"
+    - "apps/mobile/**"
+    - "crates/ui/**"
+    - "assets/ui/**"

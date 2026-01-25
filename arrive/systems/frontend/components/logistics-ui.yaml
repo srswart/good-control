@@ -1,0 +1,18 @@
+component:
+  id: logistics-ui
+  name: "Logistics UI (shipments, tracking, cross-border pack review)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/logistics/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

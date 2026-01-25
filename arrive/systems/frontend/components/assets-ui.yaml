@@ -1,0 +1,18 @@
+component:
+  id: assets-ui
+  name: "Assets UI (drones + batteries lifecycle views)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/assets/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

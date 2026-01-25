@@ -1,0 +1,18 @@
+component:
+  id: compliance-ui
+  name: "Compliance UI (approvals, doc packs, blocking reasons)"
+  type: ui-area
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/ui/compliance/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

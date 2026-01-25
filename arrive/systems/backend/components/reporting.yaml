@@ -1,0 +1,18 @@
+component:
+  id: reporting
+  name: "Reporting + analytics queries + export primitives"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/domain/reporting/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

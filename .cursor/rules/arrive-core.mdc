@@ -1,0 +1,89 @@
+---
+description: "ARRIVE core governance rules - always applied"
+alwaysApply: true
+---
+
+# ARRIVE Core Governance Rules
+
+These rules ensure outcome-first development and prevent bypassing governance.
+
+## Authoritative Metadata
+
+- Always treat `/arrive/` as authoritative metadata for governance and visibility
+- Never modify ARRIVE artifacts without understanding the impact
+- Check `docs/tech-direction/` for architectural guidance before cross-system changes
+
+## Tech Direction
+
+Before implementing features with cross-system implications:
+
+1. **Check existing tech directions** in `docs/tech-direction/`
+2. **Follow established constraints** (serialization, IDs, async patterns)
+3. **Create a new tech direction** if making significant architectural decisions
+4. **Reference tech direction** from advances that implement pieces of it
+
+Tech directions guide "how" and "why"; advances record "what was done".
+
+## Before Implementing or Editing
+
+Before making changes, determine:
+
+1. **Impacted system(s)** - check `system.yaml` roots to classify changes
+2. **Impacted ARRIVE component(s)** - match files against component selectors
+3. **Resident status** - check if any impacted component has `stage: resident`
+
+## Development Order: Tidy First, Test First
+
+Follow this strict order for all changes:
+
+### 1. Tidy First (Preparatory Refactoring)
+Before adding new behavior, make the change easy:
+- Separate tidying commits from behavioral changes
+- Tidying = refactoring without changing behavior (rename, extract, restructure)
+- Each tidying commit should be independently reviewable
+- Label tidying commits: `tidy: <description>`
+
+### 2. Test First (TDD)
+After tidying, write tests before implementation:
+- Write/modify tests that describe the expected behavior
+- Tests should fail initially (red phase)
+- Implement minimum code to pass (green phase)
+- Refactor if needed (already covered by Tidy First)
+- Label test commits: `test: <description>`
+
+### 3. Implement
+Only after tests exist:
+- Implement the behavioral change
+- All new tests should pass
+- Label implementation commits: `feat: <description>` or `fix: <description>`
+
+**The commit sequence should be: tidy → test → implement**
+
+## Reviewability Budget
+
+Keep changes within review budget:
+
+- **Green** (score ≤ 30): Proceed normally
+- **Yellow** (score 31-60): Checkpoint and consider splitting
+- **Red** (score > 60): Split unless there's documented rationale
+
+Prefer producing one reviewable Advance over one massive "everything" change.
+
+## Resident Component Requirements
+
+If any resident component is impacted, ensure the Advance includes:
+
+- [ ] Invariant impact statement
+- [ ] Rollback plan
+- [ ] Evidence links
+- [ ] Owner approval routing (PR reviewers/labels)
+
+## Transparency on Large Changes
+
+Never "silently" generate huge changes. Before writing large edits:
+
+1. Summarize intended diff footprint
+2. State expected ~N files and ~M LOC churn
+3. List impacted components
+
+Example: "This change will touch ~8 files, ~200 LOC across the auth and payments components."

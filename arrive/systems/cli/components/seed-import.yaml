@@ -1,0 +1,18 @@
+component:
+  id: seed-import
+  name: "Seed + import tools (CSV/JSON) for master data and inventory"
+  type: library
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/cli/seed_import/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

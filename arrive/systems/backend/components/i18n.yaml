@@ -1,0 +1,18 @@
+component:
+  id: i18n
+  name: "Localization support (EN+ZH) for master data + documents"
+  type: crosscutting
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/shared/i18n/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []

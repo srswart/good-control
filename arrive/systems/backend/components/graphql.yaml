@@ -1,0 +1,18 @@
+component:
+  id: graphql
+  name: "GraphQL schema + resolvers (API surface)"
+  type: service
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "crates/backend/graphql/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces: []
+
+invariants: []
