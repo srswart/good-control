@@ -114,6 +114,105 @@ impl InventoryService {
         Ok(movement_id)
     }
 
+    /// Reserve inventory with optional partial allocation support.
+    /// Returns the movement id and the actually allocated quantity.
+    pub async fn reserve_inventory_with_partial(
+        &self,
+        sku: &str,
+        location_id: &str,
+        quantity: i64,
+        allow_partial: bool,
+        actor: &str,
+        reference: Option<String>,
+    ) -> Result<(String, i64)> {
+        if quantity <= 0 {
+            return Err(PersistenceError::Configuration(
+                "Reservation quantity must be positive".to_string(),
+            ));
+        }
+
+        let mut tx = self.pool.begin().await?;
+
+        // Get position
+        let position: InventoryPositionRecord = sqlx::query_as(
+            r#"
+            SELECT * FROM inventory_positions
+            WHERE sku = ? AND location_id = ? AND status = 'available' AND lot_id IS NULL
+            "#,
+        )
+        .bind(sku)
+        .bind(location_id)
+        .fetch_optional(&mut *tx)
+        .await?
+        .ok_or_else(|| PersistenceError::NotFound {
+            entity_type: "InventoryPosition",
+            id: format!("{}@{}:available", sku, location_id),
+        })?;
+
+        let available = position.quantity_available;
+        if available <= 0 {
+            return Err(PersistenceError::Configuration(
+                "No available quantity to reserve".to_string(),
+            ));
+        }
+
+        let allocated = if allow_partial {
+            std::cmp::min(quantity, available)
+        } else {
+            if available < quantity {
+                return Err(PersistenceError::Configuration(format!(
+                    "Insufficient quantity: requested {}, available {}",
+                    quantity, available
+                )));
+            }
+            quantity
+        };
+
+        // Update position
+        let new_reserved = position.quantity_reserved + allocated;
+        let new_available = position.quantity_on_hand - new_reserved;
+
+        sqlx::query(
+            r#"
+            UPDATE inventory_positions
+            SET quantity_reserved = ?,
+                quantity_available = ?,
+                last_updated = datetime('now')
+            WHERE id = ?
+            "#,
+        )
+        .bind(new_reserved)
+        .bind(new_available)
+        .bind(&position.id)
+        .execute(&mut *tx)
+        .await?;
+
+        // Record reservation movement
+        let movement_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"
+            INSERT INTO inventory_movements (
+                id, timestamp, actor, reason, from_location_id, to_location_id,
+                sku, quantity, status_before, status_after, reference
+            )
+            VALUES (?, datetime('now'), ?, 'reservation', ?, ?, ?, ?, 'available', 'reserved', ?)
+            "#,
+        )
+        .bind(&movement_id)
+        .bind(actor)
+        .bind(location_id)
+        .bind(location_id)
+        .bind(sku)
+        .bind(allocated)
+        .bind(&reference)
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+
+        Ok((movement_id, allocated))
+    }
+
     /// Release a reservation atomically.
     pub async fn release_reservation(
         &self,

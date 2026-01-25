@@ -4,7 +4,8 @@ use async_graphql::*;
 use auth::{authenticate, AuditEventType, SqliteUserRepository, UserRepository, record_audit_event};
 
 use crate::context::GraphQLContext;
-use crate::types::{LoginResponse, User};
+use crate::types::{LoginResponse, ReserveResponse, User};
+use persistence::InventoryService;
 
 /// GraphQL Mutation root.
 #[derive(Default)]
@@ -184,5 +185,36 @@ impl Mutation {
 
         Ok(true)
     }
-}
 
+    /// Reserve inventory, optionally allowing partial allocation.
+    async fn reserve_inventory(
+        &self,
+        ctx: &Context<'_>,
+        sku: String,
+        location_id: String,
+        quantity: i64,
+        #[graphql(default = false)] allow_partial: bool,
+        reference: Option<String>,
+    ) -> Result<ReserveResponse> {
+        let gql_ctx = ctx.data::<GraphQLContext>()?;
+        let user = gql_ctx.require_user()?;
+
+        let service = InventoryService::new(gql_ctx.pool.inner().clone());
+        let (movement_id, allocated) = service
+            .reserve_inventory_with_partial(
+                &sku,
+                &location_id,
+                quantity,
+                allow_partial,
+                &user.username,
+                reference.clone(),
+            )
+            .await
+            .map_err(|e| Error::new(format!("Reservation failed: {}", e)))?;
+
+        Ok(ReserveResponse {
+            movement_id,
+            allocated,
+        })
+    }
+}

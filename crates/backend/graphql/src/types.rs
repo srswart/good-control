@@ -125,3 +125,11 @@ pub struct HealthResponse {
     pub database: String,
 }
 
+/// Reserve inventory response.
+#[derive(SimpleObject)]
+pub struct ReserveResponse {
+    /// Movement ID created for this reservation.
+    pub movement_id: String,
+    /// Quantity actually allocated (may be less than requested when allowPartial=true).
+    pub allocated: i64,
+}
