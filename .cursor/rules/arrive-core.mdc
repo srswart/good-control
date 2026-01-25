@@ -36,6 +36,8 @@ Before making changes, determine:
 
 Follow this strict order for all changes:
 
+### 0. Create a branch using the {system}/{advance number}
+
 ### 1. Tidy First (Preparatory Refactoring)
 Before adding new behavior, make the change easy:
 - Separate tidying commits from behavioral changes
