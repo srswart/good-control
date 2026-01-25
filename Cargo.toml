@@ -15,8 +15,8 @@ members = [
     # Apps
     "apps/cli",
 
-    # Domain crates (to be added)
-    # "crates/domain/*",
+    # Domain crates
+    "crates/domain/logistics",
 
     # Shared crates
     "crates/shared",
@@ -77,4 +77,4 @@ server = { path = "crates/backend/server" }
 shared = { path = "crates/shared" }
 cli-foundation = { path = "crates/cli/foundation" }
 cli-db-migrations = { path = "crates/cli/db_migrations" }
-
+logistics = { path = "crates/domain/logistics" }
