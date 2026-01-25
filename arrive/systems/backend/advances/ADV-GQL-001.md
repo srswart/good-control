@@ -6,12 +6,12 @@ advance:
   primary_component: "graphql"
   components: ["graphql"]
   started_at: "2026-01-25T08:00:00Z"
-  implementation_completed_at: ~
+  implementation_completed_at: "2026-01-25T18:30:00Z"
   pr_links: []
-  reviewability_score: 0
+  reviewability_score: 22
   risk_flags: ["new_dependency", "public_api"]
-  evidence: []
-  status: planned
+  evidence: ["tidy:preparatory", "tdd:red-green", "tests:unit", "tests:integration"]
+  status: complete
 ---
 
 ## Objective
@@ -23,11 +23,11 @@ Create the first working slice of the graphql component and establish its public
 After this advance:
 - The backend system has a defined, test-backed graphql component boundary, with the minimal scaffolding needed to support subsequent feature advances.
 
-## Planned Implementation Tasks
+## Completed Implementation Tasks
 
-- [ ] tidy: preparatory refactoring (no behavior change)
-- [ ] test: add/adjust tests describing expected behavior
-- [ ] feat/fix: implement minimal changes to pass tests
+- [x] tidy: preparatory refactoring (crate boundaries, module layout)
+- [x] test: add GraphQL integration tests (health, auth flows, permissions)
+- [x] feat: implement schema, Query/Mutation resolvers, Axum routing
 
 ## Risk + Rollback
 
@@ -36,9 +36,16 @@ After this advance:
 
 ## Evidence
 
-- [ ] tidy:preparatory
-- [ ] tdd:red-green
-- [ ] tests:unit
-- [ ] tests:integration
+- [x] tidy:preparatory
+- [x] tdd:red-green
+- [x] tests:unit (resolver helpers)
+- [x] tests:integration (health, login, currentUser, permissions)
 - [ ] ci:passed
 - [ ] review:owner
+
+## Changes Made
+
+### 2026-01-25 - feat: GraphQL schema + resolvers
+- crates/backend/graphql/src/{lib.rs,query.rs,mutation.rs,context.rs,schema.rs}: Implemented Query (health, currentUser, users/user) and Mutation (login/logout/user mgmt), context wiring with auth and pool.
+- crates/backend/server/src/graphql_router.rs: Added GraphQL routes and playground.
+- crates/backend/graphql/tests/integration_test.rs: Added integration tests for health, login, auth-required queries, roles/permissions.

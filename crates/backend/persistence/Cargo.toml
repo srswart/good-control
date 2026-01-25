@@ -25,7 +25,10 @@ thiserror = { workspace = true }
 # Internal crates
 foundation = { workspace = true }
 
+# Utilities
+uuid = { version = "1.10", features = ["v4"] }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
 [dev-dependencies]
 tokio-test = { workspace = true }
 tempfile = { workspace = true }
-

@@ -1,0 +1,42 @@
+[package]
+name = "graphql"
+description = "GraphQL schema and resolvers (API surface)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+# Internal crates
+auth = { workspace = true }
+persistence = { workspace = true }
+shared = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+
+# GraphQL
+async-graphql = "6.0"
+
+# Database
+sqlx = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Logging/Tracing
+tracing = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }
+tower = { workspace = true }
+http-body-util = "0.1"
+

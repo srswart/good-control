@@ -28,6 +28,10 @@ pub enum PersistenceError {
     /// Configuration error.
     #[error("configuration error: {0}")]
     Configuration(String),
+
+    /// Generic error helper for simple messages.
+    #[error("{0}")]
+    Generic(String),
 }
 
 #[cfg(test)]
@@ -49,4 +53,3 @@ mod tests {
         assert_eq!(err.to_string(), "configuration error: invalid database URL");
     }
 }
-
