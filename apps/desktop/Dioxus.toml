@@ -1,0 +1,9 @@
+[application]
+name = "inventory-desktop"
+default_platform = "desktop"
+
+# Note: To run as web app, use: dx serve --platform web
+# Or change default_platform to "web" once web features are configured
+
+[web.app]
+asset_dir = "assets"

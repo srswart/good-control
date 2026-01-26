@@ -413,3 +413,137 @@ async fn test_user_roles_and_permissions() {
 
     pool.close().await;
 }
+
+async fn create_cycle_count_tables(pool: &DbPool) {
+    sqlx::query(
+        r#"CREATE TABLE IF NOT EXISTS cycle_count_sessions (
+            id TEXT PRIMARY KEY NOT NULL,
+            abc_class TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            completed_at TEXT
+        )"#,
+    )
+    .execute(pool.inner())
+    .await
+    .unwrap();
+
+    sqlx::query(
+        r#"CREATE TABLE IF NOT EXISTS cycle_count_lines (
+            id TEXT PRIMARY KEY NOT NULL,
+            session_id TEXT NOT NULL,
+            sku TEXT NOT NULL,
+            location_id TEXT NOT NULL,
+            expected_qty INTEGER NOT NULL,
+            counted_qty INTEGER NOT NULL,
+            variance INTEGER NOT NULL,
+            status TEXT NOT NULL,
+            FOREIGN KEY (session_id) REFERENCES cycle_count_sessions(id) ON DELETE CASCADE
+        )"#,
+    )
+    .execute(pool.inner())
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn test_cycle_count_flow_partial_and_audit() {
+    let pool = create_test_pool().await;
+    create_cycle_count_tables(&pool).await;
+
+    // seed item/location/position (available 90)
+    let sku = "SKU-CC-1";
+    let loc = Uuid::new_v4().to_string();
+    sqlx::query(
+        r#"INSERT INTO items (id, sku, name_en, name_zh, item_type, tracking_mode, created_at, updated_at)
+           VALUES (?, ?, 'EN', 'ZH', 'part', 'none', datetime('now'), datetime('now'))"#,
+    )
+    .bind(Uuid::new_v4().to_string())
+    .bind(sku)
+    .execute(pool.inner())
+    .await
+    .unwrap();
+    sqlx::query(
+        r#"INSERT INTO locations (id, warehouse, zone, bin, created_at)
+           VALUES (?, 'WH', 'C', '010', datetime('now'))"#,
+    )
+    .bind(&loc)
+    .execute(pool.inner())
+    .await
+    .unwrap();
+    sqlx::query(
+        r#"INSERT INTO inventory_positions
+           (id, sku, location_id, status, lot_id, quantity_on_hand, quantity_reserved, quantity_available, last_updated)
+           VALUES (?, ?, ?, 'available', NULL, 100, 10, 90, datetime('now'))"#,
+    )
+    .bind(Uuid::new_v4().to_string())
+    .bind(sku)
+    .bind(&loc)
+    .execute(pool.inner())
+    .await
+    .unwrap();
+
+    // user
+    let user_repo = SqliteUserRepository::new(pool.clone());
+    let user = user_repo
+        .create("ccuser", "cc@example.com", "pw123")
+        .await
+        .unwrap();
+    let schema = build_schema();
+    let context = GraphQLContext::with_user(pool.clone(), user);
+
+    // start session
+    let start_mut = r#"mutation{ startCycleCount(abcClass:"A"){ id abcClass status } }"#;
+    let resp = schema.execute(Request::new(start_mut).data(context.clone())).await;
+    assert!(resp.errors.is_empty(), "{:?}", resp.errors);
+    let data = resp.data.into_json().unwrap();
+    let session_id = data["startCycleCount"]["id"].as_str().unwrap().to_string();
+
+    // record count counted=85, expected=90 -> variance -5
+    let mut vars = Variables::default();
+    vars.insert(Name::new("sid"), Value::from(session_id.clone()));
+    vars.insert(Name::new("sku"), Value::from(sku));
+    vars.insert(Name::new("loc"), Value::from(loc.clone()));
+    vars.insert(Name::new("cnt"), Value::from(85));
+    let rec_mut = r#"mutation($sid:String!,$sku:String!,$loc:String!,$cnt:Int!){
+        recordCycleCount(sessionId:$sid, sku:$sku, locationId:$loc, countedQty:$cnt){ id sessionId sku locationId expectedQty countedQty variance status }
+    }"#;
+    let resp2 = schema
+        .execute(Request::new(rec_mut).variables(vars).data(context.clone()))
+        .await;
+    assert!(resp2.errors.is_empty(), "{:?}", resp2.errors);
+    let data2 = resp2.data.into_json().unwrap();
+    assert_eq!(data2["recordCycleCount"]["variance"], -5);
+
+    // query session with lines
+    let mut qvars = Variables::default();
+    qvars.insert(Name::new("sid"), Value::from(session_id.clone()));
+    let q = r#"query($sid:String!){ cycleCountSession(id:$sid){ id status lines{ sku locationId expectedQty countedQty variance } } }"#;
+    let resp3 = schema
+        .execute(Request::new(q).variables(qvars).data(context.clone()))
+        .await;
+    assert!(resp3.errors.is_empty(), "{:?}", resp3.errors);
+    let data3 = resp3.data.into_json().unwrap();
+    assert_eq!(data3["cycleCountSession"]["lines"][0]["variance"], -5);
+
+    // complete session
+    let mut cvars = Variables::default();
+    cvars.insert(Name::new("sid"), Value::from(session_id.clone()));
+    let comp_mut = r#"mutation($sid:String!){ completeCycleCount(sessionId:$sid) }"#;
+    let resp4 = schema
+        .execute(Request::new(comp_mut).variables(cvars).data(context.clone()))
+        .await;
+    assert!(resp4.errors.is_empty(), "{:?}", resp4.errors);
+    let data4 = resp4.data.into_json().unwrap();
+    assert_eq!(data4["completeCycleCount"], true);
+
+    // verify audit event exists
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM audit_events WHERE resource_id = ?")
+        .bind(&session_id)
+        .fetch_one(pool.inner())
+        .await
+        .unwrap();
+    assert!(count >= 2); // start + record at least
+
+    pool.close().await;
+}

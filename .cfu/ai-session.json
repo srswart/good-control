@@ -1,0 +1,11 @@
+{
+  "id": "04d4e6b1-6327-4290-8957-b3f26833a061",
+  "title": "Inventory System User Interface",
+  "intent_summary": "",
+  "started_at": "2026-01-26T06:30:08.104Z",
+  "baseline_path": ".cfu/ai-session-baseline.json",
+  "git": {
+    "is_repo": true,
+    "base_ref": "faa4c1e7c028063490b70bff7029bdfced1edc1d"
+  }
+}

@@ -4,7 +4,7 @@ use async_graphql::*;
 use auth::{SqliteUserRepository, UserRepository};
 
 use crate::context::GraphQLContext;
-use crate::types::{HealthResponse, User};
+use crate::types::{CycleCountSession, HealthResponse, User};
 
 /// GraphQL Query root.
 #[derive(Default)]
@@ -75,5 +75,18 @@ impl Query {
 
         Ok(users.into_iter().map(User::from).collect())
     }
-}
 
+    /// Get a cycle count session by ID, with lines via subfield.
+    async fn cycle_count_session(&self, ctx: &Context<'_>, id: String) -> Result<Option<CycleCountSession>> {
+        let gql_ctx = ctx.data::<GraphQLContext>()?;
+        let row = sqlx::query_as::<_, CycleCountSession>(
+            r#"SELECT id, abc_class, status, created_at, completed_at FROM cycle_count_sessions WHERE id = ?"#,
+        )
+        .bind(&id)
+        .fetch_optional(gql_ctx.pool.inner())
+        .await
+        .map_err(|e| Error::new(format!("Failed to load cycle count session: {}", e)))?;
+
+        Ok(row)
+    }
+}

@@ -4,7 +4,8 @@
 
 use crate::error::Result;
 use async_trait::async_trait;
-use sqlx::{SqlitePool};
+use sqlx::SqlitePool;
+use std::borrow::Cow;
 
 /// Item record (items table)
 #[derive(Debug, Clone, sqlx::FromRow)]
@@ -100,6 +101,111 @@ pub async fn get_current_position(
     .await?;
 
     Ok(rec)
+}
+
+/// Build a LIKE pattern for matching a value inside a JSON array stored as text.
+fn json_array_like_pattern(value: &str) -> String {
+    // Simple match for \"value\" inside the JSON array string
+    format!("%\"{}\"%", value.replace('"', "\\\""))
+}
+
+/// Get full movement genealogy for a serial number (ordered by time asc).
+pub async fn get_serial_genealogy(
+    pool: &SqlitePool,
+    serial_number: &str,
+) -> Result<Vec<InventoryMovementRecord>> {
+    let pattern = json_array_like_pattern(serial_number);
+    let rows = sqlx::query_as::<_, InventoryMovementRecord>(
+        r#"
+        SELECT * FROM inventory_movements
+        WHERE serial_numbers IS NOT NULL
+          AND serial_numbers LIKE ?
+        ORDER BY timestamp ASC
+        "#,
+    )
+    .bind(pattern)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+/// Get shipment movements for a serial number (where-shipped).
+pub async fn get_serial_shipments(
+    pool: &SqlitePool,
+    serial_number: &str,
+) -> Result<Vec<InventoryMovementRecord>> {
+    let pattern = json_array_like_pattern(serial_number);
+    let rows = sqlx::query_as::<_, InventoryMovementRecord>(
+        r#"
+        SELECT * FROM inventory_movements
+        WHERE reason = 'shipment'
+          AND serial_numbers IS NOT NULL
+          AND serial_numbers LIKE ?
+        ORDER BY timestamp ASC
+        "#,
+    )
+    .bind(pattern)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows)
+}
+
+/// Get full movement genealogy for a lot number (ordered by time asc).
+pub async fn get_lot_genealogy_by_number(
+    pool: &SqlitePool,
+    lot_number: &str,
+) -> Result<Vec<InventoryMovementRecord>> {
+    let lot_id: Option<String> = sqlx::query_scalar(
+        "SELECT id FROM lots WHERE lot_number = ?",
+    )
+    .bind(lot_number)
+    .fetch_optional(pool)
+    .await?;
+
+    if let Some(id) = lot_id {
+        let rows = sqlx::query_as::<_, InventoryMovementRecord>(
+            r#"
+            SELECT * FROM inventory_movements
+            WHERE lot_id = ?
+            ORDER BY timestamp ASC
+            "#,
+        )
+        .bind(id)
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
+    } else {
+        Ok(vec![])
+    }
+}
+
+/// Get shipment movements for a lot number (where-shipped).
+pub async fn get_lot_shipments_by_number(
+    pool: &SqlitePool,
+    lot_number: &str,
+) -> Result<Vec<InventoryMovementRecord>> {
+    let lot_id: Option<String> = sqlx::query_scalar(
+        "SELECT id FROM lots WHERE lot_number = ?",
+    )
+    .bind(lot_number)
+    .fetch_optional(pool)
+    .await?;
+
+    if let Some(id) = lot_id {
+        let rows = sqlx::query_as::<_, InventoryMovementRecord>(
+            r#"
+            SELECT * FROM inventory_movements
+            WHERE reason = 'shipment' AND lot_id = ?
+            ORDER BY timestamp ASC
+            "#,
+        )
+        .bind(id)
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
+    } else {
+        Ok(vec![])
+    }
 }
 
 #[cfg(test)]
@@ -238,5 +344,183 @@ mod tests {
             .unwrap_err();
         let msg2 = delete_err.to_string();
         assert!(msg2.contains("append-only") || msg2.contains("cannot be deleted"));
+    }
+
+    #[tokio::test]
+    async fn test_serial_genealogy_and_shipments() {
+        let pool = setup_pool().await;
+        let sku = "SKU-SERIAL";
+        let loc1 = Uuid::new_v4().to_string();
+        let loc2 = Uuid::new_v4().to_string();
+        let serial = "S12345";
+
+        // Seed item, locations
+        sqlx::query(
+            r#"INSERT INTO items (id, sku, name_en, name_zh, item_type, tracking_mode, created_at, updated_at)
+               VALUES (?, ?, 'EN', 'ZH', 'part', 'serial', datetime('now'), datetime('now'))"#,
+        )
+        .bind(Uuid::new_v4().to_string())
+        .bind(sku)
+        .execute(&pool)
+        .await
+        .unwrap();
+        sqlx::query(
+            r#"INSERT INTO locations (id, warehouse, zone, bin, created_at)
+               VALUES (?, 'WH', 'A', '001', datetime('now'))"#,
+        )
+        .bind(&loc1)
+        .execute(&pool)
+        .await
+        .unwrap();
+        sqlx::query(
+            r#"INSERT INTO locations (id, warehouse, zone, bin, created_at)
+               VALUES (?, 'WH', 'B', '002', datetime('now'))"#,
+        )
+        .bind(&loc2)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        // Movements: receipt -> transfer -> shipment (explicit timestamps for deterministic order)
+        let t1 = Utc::now();
+        let t2 = t1 + chrono::Duration::seconds(1);
+        let t3 = t1 + chrono::Duration::seconds(2);
+        let receipt_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"INSERT INTO inventory_movements
+               (id, timestamp, actor, reason, from_location_id, to_location_id, sku, quantity, serial_numbers, status_before, status_after)
+               VALUES (?, ?, 'user', 'receipt', NULL, ?, ?, 1, ?, 'available', 'available')"#,
+        )
+        .bind(&receipt_id)
+        .bind(t1.to_rfc3339())
+        .bind(&loc1)
+        .bind(sku)
+        .bind(format!("[\"{}\"]", serial))
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let transfer_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"INSERT INTO inventory_movements
+               (id, timestamp, actor, reason, from_location_id, to_location_id, sku, quantity, serial_numbers, status_before, status_after)
+               VALUES (?, ?, 'user', 'transfer', ?, ?, ?, 1, ?, 'available', 'available')"#,
+        )
+        .bind(&transfer_id)
+        .bind(t2.to_rfc3339())
+        .bind(&loc1)
+        .bind(&loc2)
+        .bind(sku)
+        .bind(format!("[\"{}\"]", serial))
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let ship_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"INSERT INTO inventory_movements
+               (id, timestamp, actor, reason, from_location_id, to_location_id, sku, quantity, serial_numbers, status_before, status_after)
+               VALUES (?, ?, 'user', 'shipment', ?, NULL, ?, -1, ?, 'reserved', 'in_transit')"#,
+        )
+        .bind(&ship_id)
+        .bind(t3.to_rfc3339())
+        .bind(&loc2)
+        .bind(sku)
+        .bind(format!("[\"{}\"]", serial))
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        // Genealogy
+        let history = get_serial_genealogy(&pool, serial).await.unwrap();
+        assert_eq!(history.len(), 3);
+        assert_eq!(history[0].reason, "receipt");
+        assert_eq!(history[1].reason, "transfer");
+        assert_eq!(history[2].reason, "shipment");
+
+        // Where shipped
+        let shipments = get_serial_shipments(&pool, serial).await.unwrap();
+        assert_eq!(shipments.len(), 1);
+        assert_eq!(shipments[0].id, ship_id);
+    }
+
+    #[tokio::test]
+    async fn test_lot_genealogy_and_shipments() {
+        let pool = setup_pool().await;
+        let sku = "SKU-LOT";
+        let loc1 = Uuid::new_v4().to_string();
+        let lot_number = format!("LOT-{}", Uuid::new_v4());
+
+        // Seed item, location, lot
+        sqlx::query(
+            r#"INSERT INTO items (id, sku, name_en, name_zh, item_type, tracking_mode, created_at, updated_at)
+               VALUES (?, ?, 'EN', 'ZH', 'part', 'lot', datetime('now'), datetime('now'))"#,
+        )
+        .bind(Uuid::new_v4().to_string())
+        .bind(sku)
+        .execute(&pool)
+        .await
+        .unwrap();
+        sqlx::query(
+            r#"INSERT INTO locations (id, warehouse, zone, bin, created_at)
+               VALUES (?, 'WH', 'A', '001', datetime('now'))"#,
+        )
+        .bind(&loc1)
+        .execute(&pool)
+        .await
+        .unwrap();
+        let lot_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"INSERT INTO lots (id, lot_number, sku, expiry_date, created_at)
+               VALUES (?, ?, ?, NULL, datetime('now'))"#,
+        )
+        .bind(&lot_id)
+        .bind(&lot_number)
+        .bind(sku)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        // Movements with lot
+        let t1 = Utc::now();
+        let t2 = t1 + chrono::Duration::seconds(1);
+        let receipt_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"INSERT INTO inventory_movements
+               (id, timestamp, actor, reason, from_location_id, to_location_id, sku, quantity, lot_id, status_before, status_after)
+               VALUES (?, ?, 'user', 'receipt', NULL, ?, ?, 50, ?, 'available', 'available')"#,
+        )
+        .bind(&receipt_id)
+        .bind(t1.to_rfc3339())
+        .bind(&loc1)
+        .bind(sku)
+        .bind(&lot_id)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let ship_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"INSERT INTO inventory_movements
+               (id, timestamp, actor, reason, from_location_id, to_location_id, sku, quantity, lot_id, status_before, status_after)
+               VALUES (?, ?, 'user', 'shipment', ?, NULL, ?, -20, ?, 'reserved', 'in_transit')"#,
+        )
+        .bind(&ship_id)
+        .bind(t2.to_rfc3339())
+        .bind(&loc1)
+        .bind(sku)
+        .bind(&lot_id)
+        .execute(&pool)
+        .await
+        .unwrap();
+
+        let history = get_lot_genealogy_by_number(&pool, &lot_number).await.unwrap();
+        assert_eq!(history.len(), 2);
+        assert_eq!(history[0].reason, "receipt");
+        assert_eq!(history[1].reason, "shipment");
+
+        let shipments = get_lot_shipments_by_number(&pool, &lot_number).await.unwrap();
+        assert_eq!(shipments.len(), 1);
+        assert_eq!(shipments[0].id, ship_id);
     }
 }

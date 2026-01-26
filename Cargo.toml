@@ -12,8 +12,20 @@ members = [
     "crates/cli/foundation",
     "crates/cli/db_migrations",
 
+    # UI crates
+    "crates/ui/foundation",
+    "crates/ui/design_system",
+    "crates/ui/app_shell",
+    "crates/ui/inventory",
+    "crates/ui/assets",
+    "crates/ui/compliance",
+    "crates/ui/warehouse",
+    "crates/ui/logistics",
+    "crates/ui/procurement_orders",
+
     # Apps
     "apps/cli",
+    "apps/desktop",
 
     # Domain crates
     "crates/domain/logistics",
@@ -78,3 +90,12 @@ shared = { path = "crates/shared" }
 cli-foundation = { path = "crates/cli/foundation" }
 cli-db-migrations = { path = "crates/cli/db_migrations" }
 logistics = { path = "crates/domain/logistics" }
+ui-foundation = { path = "crates/ui/foundation" }
+ui-design-system = { path = "crates/ui/design_system" }
+ui-app-shell = { path = "crates/ui/app_shell" }
+ui-inventory = { path = "crates/ui/inventory" }
+ui-assets = { path = "crates/ui/assets" }
+ui-compliance = { path = "crates/ui/compliance" }
+ui-warehouse = { path = "crates/ui/warehouse" }
+ui-logistics = { path = "crates/ui/logistics" }
+ui-procurement-orders = { path = "crates/ui/procurement_orders" }

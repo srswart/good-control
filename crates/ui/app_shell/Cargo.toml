@@ -1,0 +1,23 @@
+[package]
+name = "ui-app-shell"
+description = "App shell: routing, navigation, session, permission-aware rendering"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+ui-foundation = { workspace = true }
+ui-design-system = { workspace = true }
+ui-inventory = { workspace = true }
+ui-assets = { workspace = true }
+ui-compliance = { workspace = true }
+ui-warehouse = { workspace = true }
+ui-logistics = { workspace = true }
+ui-procurement-orders = { workspace = true }
+shared = { workspace = true }
+dioxus = { version = "0.7", features = ["desktop", "router"] }
+dioxus-router = "0.7"
+
+[dev-dependencies]
+dioxus-ssr = "0.7"

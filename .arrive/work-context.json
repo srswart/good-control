@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "updated_at": "2026-01-26T10:35:03.725035Z",
+  "slots": {
+    "default": {
+      "advance_id": "ADV-COMPUI-001",
+      "phase": "implement",
+      "set_at": "2026-01-26T10:35:03.725035Z"
+    }
+  }
+}

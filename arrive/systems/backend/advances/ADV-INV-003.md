@@ -52,4 +52,3 @@ After this advance:
 - `crates/backend/graphql/src/types.rs`: Added `ReserveResponse` type.
 - `crates/backend/graphql/src/mutation.rs`: Added `reserveInventory` mutation with `allowPartial` flag.
 - `crates/backend/graphql/tests/integration_test.rs`: Added two tests covering partial allocation and conflict prevention.
-

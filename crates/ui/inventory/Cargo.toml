@@ -1,0 +1,18 @@
+[package]
+name = "ui-inventory"
+description = "Inventory UI: items, stock, traceability, cycle counts"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+ui-foundation = { workspace = true }
+ui-design-system = { workspace = true }
+shared = { workspace = true }
+dioxus = { version = "0.7", features = ["desktop", "router"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+dioxus-ssr = "0.7"

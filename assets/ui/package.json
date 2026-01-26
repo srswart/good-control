@@ -1,0 +1,14 @@
+{
+  "name": "inventory-ui-assets",
+  "version": "0.1.0",
+  "description": "TailwindCSS pipeline for inventory desktop app",
+  "scripts": {
+    "build:css": "tailwindcss -i ./src/input.css -o ./dist/tailwind.css --minify",
+    "watch:css": "tailwindcss -i ./src/input.css -o ./dist/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
+  }
+}

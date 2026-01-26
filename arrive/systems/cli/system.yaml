@@ -2,9 +2,23 @@ system:
   id: cli
   name: "CLI"
   description: "Rust CLI for ops/admin workflows: migrations, imports/exports, compliance checks, and Kingdee sync tooling."
+  default_branch: main
   owners:
     - team: inventory
-
-roots:
+  roots:
     - "apps/cli/**"
     - "crates/cli/**"
+
+policies:
+  advance_required_on_pr: true
+  resident_gates:
+    require_owner_approval: true
+    require_invariant_impact_statement: true
+    require_rollback_plan: true
+    require_evidence_links: true
+
+reviewability:
+  thresholds:
+    green: 30
+    yellow: 60
+  scoring_rules_version: 1

@@ -1,0 +1,15 @@
+[package]
+name = "ui-foundation"
+description = "Frontend foundation: app bootstrap, theme, Tailwind integration, error boundary"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+tracing = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Dioxus 0.7.x
+dioxus = { version = "0.7", features = ["desktop"] }

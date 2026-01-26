@@ -40,3 +40,8 @@ vocabulary:
     - docs:updated
     - tdd:red-green
     - tidy:preparatory
+
+systems:
+  - backend
+  - cli
+  - frontend

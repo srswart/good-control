@@ -2,6 +2,8 @@
 
 use async_graphql::*;
 use auth::{Permission as AuthPermission, Role as AuthRole, User as AuthUser};
+use async_graphql::*;
+use sqlx::FromRow;
 
 /// Role type for GraphQL.
 #[derive(Clone, SimpleObject)]
@@ -132,4 +134,45 @@ pub struct ReserveResponse {
     pub movement_id: String,
     /// Quantity actually allocated (may be less than requested when allowPartial=true).
     pub allocated: i64,
+}
+
+/// Cycle count line type.
+#[derive(Clone, SimpleObject, FromRow)]
+pub struct CycleCountLine {
+    pub id: String,
+    pub session_id: String,
+    pub sku: String,
+    pub location_id: String,
+    pub expected_qty: i64,
+    pub counted_qty: i64,
+    pub variance: i64,
+    pub status: String,
+}
+
+/// Cycle count session type.
+#[derive(Clone, SimpleObject, FromRow)]
+#[graphql(complex)]
+pub struct CycleCountSession {
+    pub id: String,
+    pub abc_class: String,
+    pub status: String,
+    pub created_at: String,
+    pub completed_at: Option<String>,
+}
+
+#[ComplexObject]
+impl CycleCountSession {
+    async fn lines(&self, ctx: &Context<'_>) -> Result<Vec<CycleCountLine>> {
+        let gql_ctx = ctx.data::<crate::GraphQLContext>()?;
+        let rows = sqlx::query_as::<_, CycleCountLine>(
+            r#"SELECT id, session_id, sku, location_id, expected_qty, counted_qty, variance, status
+               FROM cycle_count_lines WHERE session_id = ? ORDER BY sku, location_id"#,
+        )
+        .bind(&self.id)
+        .fetch_all(gql_ctx.pool.inner())
+        .await
+        .map_err(|e| Error::new(format!("Failed to load cycle count lines: {}", e)))?;
+
+        Ok(rows)
+    }
 }
