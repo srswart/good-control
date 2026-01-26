@@ -1,5 +1,7 @@
 ---
-description: "Start a new change with system/component detection"
+name: arrive-start
+description: Start a new change with system/component detection
+disable-model-invocation: true
 ---
 
 # ARRIVE Start

@@ -1,5 +1,7 @@
 ---
-description: "Analyze changes and suggest split points for reviewability"
+name: arrive-checkpoint
+description: Analyze changes and suggest split points for reviewability
+disable-model-invocation: true
 ---
 
 # ARRIVE Checkpoint

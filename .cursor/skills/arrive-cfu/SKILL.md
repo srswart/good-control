@@ -1,5 +1,7 @@
 ---
-description: "Generate Check for Understanding questions for reviewers"
+name: arrive-cfu
+description: Generate Check for Understanding questions for reviewers
+disable-model-invocation: true
 ---
 
 # ARRIVE CFU (Check for Understanding)

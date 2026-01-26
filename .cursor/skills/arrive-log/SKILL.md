@@ -1,5 +1,7 @@
 ---
-description: "Append a Changes Made entry to the current Advance"
+name: arrive-log
+description: Append a Changes Made entry to the current Advance
+disable-model-invocation: true
 ---
 
 # ARRIVE Log

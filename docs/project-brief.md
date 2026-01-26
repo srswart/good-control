@@ -3,7 +3,7 @@
 ## 1) What we’re building
 An operator-grade, desktop-first inventory + warehouse + compliance system for industrial drones and their supply chain assets. It tracks drones, parts, batteries, tools/equipment, and consumables, and supports multi-jurisdiction documentation and approvals that can block operations.
 
-**Languages:** English + Chinese. (No Arabic support.)  
+**Languages:** English + Chinese. 
 **Primary UI:** Desktop (Dioxus 0.7.x + Tailwind).  
 **Selective mobile:** iOS/Android for scan-first warehouse tasks and quick lookup (subset).  
 **Backend:** Rust (Axum), GraphQL, SQLx, SQLite.  

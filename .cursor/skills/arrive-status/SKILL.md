@@ -1,5 +1,7 @@
 ---
-description: "Show current change impact and reviewability score"
+name: arrive-status
+description: Show current change impact and reviewability score
+disable-model-invocation: true
 ---
 
 # ARRIVE Status

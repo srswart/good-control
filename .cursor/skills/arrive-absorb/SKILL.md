@@ -1,5 +1,7 @@
 ---
-description: "Absorb an existing repo into ARRIVE (draft artifacts + report)"
+name: arrive-absorb
+description: Absorb an existing repo into ARRIVE (draft artifacts + report)
+disable-model-invocation: true
 ---
 
 # ARRIVE Absorb
@@ -25,11 +27,10 @@ arrive absorb draft --repo-id REPO_ID --repo-name "REPO_NAME" --default-branch D
 - `arrive/registry.yaml`
 - `arrive/systems/**/system.yaml`
 - `arrive/systems/**/components/*.yaml`
-- `arrive/systems/**/advances/*.md` (one “absorb” advance per component)
+- `arrive/systems/**/advances/*.md` (one "absorb" advance per component)
 - `arrive/absorb/report.md` (created files + unknowns checklist)
 
 ## Notes
 
 - Safety: the absorb workflow refuses to overwrite existing files (especially advances).
 - If `arrive/` already exists, rerun with `--force` only if you intend to regenerate drafts (still no overwrites).
-

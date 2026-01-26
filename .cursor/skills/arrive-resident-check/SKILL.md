@@ -1,5 +1,7 @@
 ---
-description: "Validate resident component gates are satisfied"
+name: arrive-resident-check
+description: Validate resident component gates are satisfied
+disable-model-invocation: true
 ---
 
 # ARRIVE Resident Check

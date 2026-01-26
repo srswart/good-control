@@ -29,6 +29,7 @@ members = [
 
     # Domain crates
     "crates/domain/logistics",
+    "crates/domain/procurement",
 
     # Shared crates
     "crates/shared",
@@ -90,6 +91,7 @@ shared = { path = "crates/shared" }
 cli-foundation = { path = "crates/cli/foundation" }
 cli-db-migrations = { path = "crates/cli/db_migrations" }
 logistics = { path = "crates/domain/logistics" }
+procurement = { path = "crates/domain/procurement" }
 ui-foundation = { path = "crates/ui/foundation" }
 ui-design-system = { path = "crates/ui/design_system" }
 ui-app-shell = { path = "crates/ui/app_shell" }

@@ -1,5 +1,7 @@
 ---
-description: "Draft or update an Advance file for current changes"
+name: arrive-advance-draft
+description: Draft or update an Advance file for current changes
+disable-model-invocation: true
 ---
 
 # ARRIVE Advance Draft
