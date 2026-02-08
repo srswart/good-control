@@ -32,6 +32,8 @@ pub fn t(locale: SupportedLocale, key: &'static str) -> &'static str {
         (SupportedLocale::Chinese, "reporting") => "报告",
         (SupportedLocale::English, "integrations") => "Integrations",
         (SupportedLocale::Chinese, "integrations") => "集成",
+        (SupportedLocale::English, "admin_users") => "Admin Users",
+        (SupportedLocale::Chinese, "admin_users") => "管理员用户",
         
         // Inventory UI
         (SupportedLocale::English, "items") => "Items",
@@ -133,7 +135,7 @@ mod tests {
 
     #[test]
     fn test_all_route_labels_translated() {
-        let routes = vec!["home", "inventory", "warehouse", "assets", "compliance", "orders", "logistics", "reporting", "integrations"];
+        let routes = vec!["home", "inventory", "warehouse", "assets", "compliance", "orders", "logistics", "reporting", "integrations", "admin_users"];
         
         for route in routes {
             // English translation should not be empty

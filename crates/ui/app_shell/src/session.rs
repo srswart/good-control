@@ -83,6 +83,7 @@ impl Session {
             Route::Reporting {} => self.has_role("compliance_officer"),
             Route::Integrations {} => false,
             Route::Demo {} => self.has_role("warehouse_supervisor"),
+            Route::AdminUsers {} => false,
             Route::NotFound {} => true,
             Route::Login {} => true,
         }

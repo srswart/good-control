@@ -7,6 +7,7 @@ use crate::language::use_locale;
 use crate::i18n::t;
 use crate::logo::{Logo, LogoSize};
 use crate::brand::BrandColors;
+use ui_admin::AdminUsersView;
 use ui_inventory::{ItemsList, StockView, TraceabilityView, CycleCountsView, GraphQLDemo};
 use ui_assets::{DronesView, BatteriesView};
 use ui_compliance::{ApprovalsView, DocPacksView, BlockingReasonsView};
@@ -52,6 +53,9 @@ pub enum Route {
     
     #[route("/integrations")]
     Integrations {},
+
+    #[route("/admin/users")]
+    AdminUsers {},
     
     #[route("/404")]
     NotFound {},
@@ -155,6 +159,14 @@ pub fn Demo() -> Element {
             class: "text-center text-gray-500",
             "Demo page - This route will be handled by the demo component"
         }
+    }
+}
+
+/// Admin users page component
+#[component]
+pub fn AdminUsers() -> Element {
+    rsx! {
+        AdminUsersView {}
     }
 }
 

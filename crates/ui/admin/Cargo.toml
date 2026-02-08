@@ -1,0 +1,24 @@
+[package]
+name = "ui-admin"
+description = "Admin UI: user and role management"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+ui-foundation = { workspace = true }
+ui-design-system = { workspace = true }
+shared = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Platform-specific Dioxus features
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dioxus = { version = "0.7", features = ["desktop", "router"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+dioxus = { version = "0.7", features = ["web", "router"] }
+
+[dev-dependencies]
+dioxus-ssr = "0.7"

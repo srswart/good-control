@@ -9,6 +9,7 @@ license.workspace = true
 [dependencies]
 ui-foundation = { workspace = true }
 ui-design-system = { workspace = true }
+ui-admin = { workspace = true }
 ui-inventory = { workspace = true }
 ui-assets = { workspace = true }
 ui-compliance = { workspace = true }

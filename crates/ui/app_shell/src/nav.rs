@@ -73,6 +73,7 @@ pub fn Navigation(
                             Route::Logistics {} => "logistics",
                             Route::Reporting {} => "reporting",
                             Route::Integrations {} => "integrations",
+                            Route::AdminUsers {} => "admin_users",
                             _ => "",
                         };
                         if !label_key.is_empty() {
@@ -99,6 +100,7 @@ pub fn default_nav_items() -> Vec<NavItem> {
         NavItem::new(Route::Logistics {}, "Logistics"),
         NavItem::new(Route::Reporting {}, "Reporting"),
         NavItem::new(Route::Integrations {}, "Integrations"),
+        NavItem::new(Route::AdminUsers {}, "Admin Users"),
     ]
 }
 
@@ -128,5 +130,6 @@ mod tests {
         assert!(items.iter().any(|i| matches!(i.route, Route::Home {})));
         assert!(items.iter().any(|i| matches!(i.route, Route::Inventory {})));
         assert!(items.iter().any(|i| matches!(i.route, Route::Warehouse {})));
+        assert!(items.iter().any(|i| matches!(i.route, Route::AdminUsers {})));
     }
 }

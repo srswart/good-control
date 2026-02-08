@@ -11,6 +11,7 @@ mod error;
 mod inventory_repository;
 mod inventory_service;
 mod migrations;
+mod mock_data;
 mod pool;
 mod repository;
 mod transaction;
@@ -23,6 +24,7 @@ pub use inventory_repository::{
     InventoryRepository, ItemRecord, LocationRecord, SqliteInventoryRepository,
 };
 pub use inventory_service::InventoryService;
+pub use mock_data::{reload_mock_data, MockDataSummary};
 pub use migrations::run_migrations;
 pub use pool::{DbPool, DbPoolConfig};
 pub use repository::Repository;

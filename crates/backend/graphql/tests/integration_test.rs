@@ -3707,7 +3707,7 @@ async fn test_ship_compliance_and_dispatch() {
     "#;
 
     let query_vars = Variables::from_json(serde_json::json!({"id": task_id}));
-    let query_response = schema.execute(Request::new(query).variables(query_vars).data(context.clone())).await;
+    let query_response = schema.execute(Request::new(query).variables(query_vars.clone()).data(context.clone())).await;
     assert!(query_response.errors.is_empty());
     let query_data = query_response.data.into_json().unwrap();
     assert_eq!(query_data["shipTask"]["taskNumber"], "SHIP-DISPATCH-001");
@@ -3762,7 +3762,7 @@ async fn test_query_ship_tasks_by_status() {
     "#;
 
     let query_vars = Variables::from_json(serde_json::json!({"limit": 10, "offset": 0}));
-    let query_response = schema.execute(Request::new(query).variables(query_vars).data(context.clone())).await;
+    let query_response = schema.execute(Request::new(query).variables(query_vars.clone()).data(context.clone())).await;
     assert!(query_response.errors.is_empty());
     let query_data = query_response.data.into_json().unwrap();
     assert_eq!(query_data["shipTasks"].as_array().unwrap().len(), 3);
@@ -3784,6 +3784,219 @@ async fn test_query_ship_tasks_by_status() {
     let status_data = status_response.data.into_json().unwrap();
     assert_eq!(status_data["shipTasksByStatus"].as_array().unwrap().len(), 3);
     assert!(status_data["shipTasksByStatus"].as_array().unwrap().iter().all(|t| t["status"] == "PENDING"));
+
+    pool.close().await;
+}
+
+// ============================================================================
+// Admin User Management Tests (ADV-AUTH-004)
+// ============================================================================
+
+#[tokio::test]
+async fn test_roles_query_requires_admin_permission() {
+    let pool = create_test_pool().await;
+    let schema = build_schema();
+
+    let user_repo = SqliteUserRepository::new(pool.clone());
+    let user = user_repo
+        .create("viewer", "viewer@example.com", "password123")
+        .await
+        .unwrap();
+
+    let context = GraphQLContext::with_user(pool.clone(), user);
+
+    let query = r#"
+        query {
+            roles {
+                id
+                name
+            }
+        }
+    "#;
+
+    let response = schema.execute(Request::new(query).data(context)).await;
+    assert!(!response.errors.is_empty());
+
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn test_admin_can_list_roles() {
+    let pool = create_test_pool().await;
+    let schema = build_schema();
+
+    let user_repo = SqliteUserRepository::new(pool.clone());
+    let user = user_repo
+        .create("admin", "admin@example.com", "password123")
+        .await
+        .unwrap();
+
+    let role = auth::find_role_by_name(&pool, "admin").await.unwrap().unwrap();
+    auth::assign_role(&pool, user.id, role.id, None).await.unwrap();
+
+    let context = GraphQLContext::with_user(pool.clone(), user);
+
+    let query = r#"
+        query {
+            roles {
+                id
+                name
+            }
+        }
+    "#;
+
+    let response = schema.execute(Request::new(query).data(context)).await;
+    assert!(response.errors.is_empty(), "Errors: {:?}", response.errors);
+    let data = response.data.into_json().unwrap();
+    let roles = data["roles"].as_array().unwrap();
+    assert!(!roles.is_empty());
+    assert!(roles.iter().any(|r| r["name"] == "admin"));
+
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn test_admin_assigns_and_removes_role() {
+    let pool = create_test_pool().await;
+    let schema = build_schema();
+
+    let user_repo = SqliteUserRepository::new(pool.clone());
+    let admin = user_repo
+        .create("admin", "admin@example.com", "password123")
+        .await
+        .unwrap();
+    let user = user_repo
+        .create("worker", "worker@example.com", "password123")
+        .await
+        .unwrap();
+
+    let admin_role = auth::find_role_by_name(&pool, "admin").await.unwrap().unwrap();
+    let warehouse_role = auth::find_role_by_name(&pool, "warehouse_operator").await.unwrap().unwrap();
+    auth::assign_role(&pool, admin.id, admin_role.id, None).await.unwrap();
+
+    let context = GraphQLContext::with_user(pool.clone(), admin);
+
+    let assign_mutation = r#"
+        mutation AssignRole($userId: ID!, $roleId: ID!) {
+            assignRole(userId: $userId, roleId: $roleId)
+        }
+    "#;
+
+    let assign_vars = Variables::from_json(serde_json::json!({
+        "userId": user.id.to_string(),
+        "roleId": warehouse_role.id.to_string()
+    }));
+    let assign_response = schema
+        .execute(Request::new(assign_mutation).variables(assign_vars).data(context.clone()))
+        .await;
+    assert!(assign_response.errors.is_empty(), "Errors: {:?}", assign_response.errors);
+    assert_eq!(assign_response.data.into_json().unwrap()["assignRole"], true);
+
+    let query = r#"
+        query GetUser($id: ID!) {
+            user(id: $id) {
+                id
+                roles { name }
+            }
+        }
+    "#;
+    let query_vars = Variables::from_json(serde_json::json!({"id": user.id.to_string()}));
+    let query_response = schema.execute(Request::new(query).variables(query_vars.clone()).data(context.clone())).await;
+    assert!(query_response.errors.is_empty(), "Errors: {:?}", query_response.errors);
+    let query_data = query_response.data.into_json().unwrap();
+    let roles = query_data["user"]["roles"].as_array().unwrap();
+    assert!(roles.iter().any(|r| r["name"] == "warehouse_operator"));
+
+    let remove_mutation = r#"
+        mutation RemoveRole($userId: ID!, $roleId: ID!) {
+            removeRole(userId: $userId, roleId: $roleId)
+        }
+    "#;
+    let remove_vars = Variables::from_json(serde_json::json!({
+        "userId": user.id.to_string(),
+        "roleId": warehouse_role.id.to_string()
+    }));
+    let remove_response = schema
+        .execute(Request::new(remove_mutation).variables(remove_vars).data(context.clone()))
+        .await;
+    assert!(remove_response.errors.is_empty(), "Errors: {:?}", remove_response.errors);
+    assert_eq!(remove_response.data.into_json().unwrap()["removeRole"], true);
+
+    let query_response = schema.execute(Request::new(query).variables(query_vars).data(context)).await;
+    assert!(query_response.errors.is_empty(), "Errors: {:?}", query_response.errors);
+    let query_data = query_response.data.into_json().unwrap();
+    let roles = query_data["user"]["roles"].as_array().unwrap();
+    assert!(!roles.iter().any(|r| r["name"] == "warehouse_operator"));
+
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn test_reload_mock_data_requires_admin() {
+    let pool = create_test_pool().await;
+    let schema = build_schema();
+
+    let user_repo = SqliteUserRepository::new(pool.clone());
+    let user = user_repo
+        .create("viewer", "viewer@example.com", "password123")
+        .await
+        .unwrap();
+
+    let context = GraphQLContext::with_user(pool.clone(), user);
+
+    let mutation = r#"
+        mutation {
+            reloadMockData {
+                inventoryItems
+                receivingTasks
+            }
+        }
+    "#;
+
+    let response = schema.execute(Request::new(mutation).data(context)).await;
+    assert!(!response.errors.is_empty());
+
+    pool.close().await;
+}
+
+#[tokio::test]
+async fn test_admin_can_reload_mock_data() {
+    let pool = create_test_pool().await;
+    let schema = build_schema();
+
+    let user_repo = SqliteUserRepository::new(pool.clone());
+    let admin = user_repo
+        .create("admin", "admin@example.com", "password123")
+        .await
+        .unwrap();
+
+    let role = auth::find_role_by_name(&pool, "admin").await.unwrap().unwrap();
+    auth::assign_role(&pool, admin.id, role.id, None).await.unwrap();
+
+    let context = GraphQLContext::with_user(pool.clone(), admin);
+
+    let mutation = r#"
+        mutation {
+            reloadMockData {
+                inventoryItems
+                inventoryLocations
+                inventoryPositions
+                receivingTasks
+                pickTasks
+                packTasks
+                shipTasks
+            }
+        }
+    "#;
+
+    let response = schema.execute(Request::new(mutation).data(context)).await;
+    assert!(response.errors.is_empty(), "Errors: {:?}", response.errors);
+    let data = response.data.into_json().unwrap();
+    assert!(data["reloadMockData"]["inventoryItems"].as_i64().unwrap() > 0);
+    assert!(data["reloadMockData"]["inventoryLocations"].as_i64().unwrap() > 0);
+    assert!(data["reloadMockData"]["inventoryPositions"].as_i64().unwrap() > 0);
+    assert!(data["reloadMockData"]["receivingTasks"].as_i64().unwrap() > 0);
+    assert!(data["reloadMockData"]["shipTasks"].as_i64().unwrap() > 0);
 
     pool.close().await;
 }

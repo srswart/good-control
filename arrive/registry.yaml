@@ -47,3 +47,17 @@ systems:
   - backend
   - cli
   - frontend
+
+reviewability:
+    thresholds:
+      green: 30
+      yellow: 60
+    scoring_rules_version: 2
+    review_time:
+      base_minutes: 10
+      minutes_per_point: 1.5
+      minutes_per_file: 0.4
+      minutes_per_risk_flag: 8
+      resident_bonus_minutes: 15
+      default_reviewer_multiplier: 1.0
+      reviewer_multipliers: {}

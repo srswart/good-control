@@ -17,6 +17,7 @@ members = [
     "crates/ui/foundation",
     "crates/ui/design_system",
     "crates/ui/app_shell",
+    "crates/ui/admin",
     "crates/ui/inventory",
     "crates/ui/assets",
     "crates/ui/compliance",
@@ -105,6 +106,7 @@ warehouse = { path = "crates/domain/warehouse" }
 ui-foundation = { path = "crates/ui/foundation" }
 ui-design-system = { path = "crates/ui/design_system" }
 ui-app-shell = { path = "crates/ui/app_shell" }
+ui-admin = { path = "crates/ui/admin" }
 ui-inventory = { path = "crates/ui/inventory" }
 ui-assets = { path = "crates/ui/assets" }
 ui-compliance = { path = "crates/ui/compliance" }

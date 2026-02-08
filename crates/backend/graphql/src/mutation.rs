@@ -5,12 +5,13 @@ use auth::{
     authenticate, begin_passkey_authentication, begin_passkey_registration, finish_passkey_authentication,
     finish_passkey_registration, AuditEventType, SqliteUserRepository, UserRepository, record_audit_event,
 };
+use procurement::purchase_order::PurchaseOrder;
 use uuid::Uuid;
 
 use crate::context::GraphQLContext;
 use crate::types::{
     CreateItemInput, CreateLocationInput, CycleCountLine, CycleCountSession, InventoryMovement,
-    Item, Location, LoginResponse, PasskeyChallenge, ReserveResponse, User, ReceivingTask, ReceivingLine,
+    Item, Location, LoginResponse, MockDataSummary, PasskeyChallenge, ReserveResponse, User, ReceivingTask, ReceivingLine,
     CreateReceivingTaskInput, RecordQCOutcomeInput, QuarantineLineInput,
     ReleaseFromQuarantineInput, RecordReceiptInput, AcknowledgeDiscrepancyInput,
     FieldError, StructuredError, validate_not_empty,
@@ -24,12 +25,43 @@ use crate::types::{
 };
 use persistence::InventoryService;
 
+struct MockTaskSummary {
+    receiving_tasks: i64,
+    pick_tasks: i64,
+    pack_tasks: i64,
+    ship_tasks: i64,
+}
+
 /// GraphQL Mutation root.
 #[derive(Default)]
 pub struct Mutation;
 
 #[Object]
 impl Mutation {
+    /// Reload mock data (admin-only).
+    async fn reload_mock_data(&self, ctx: &Context<'_>) -> Result<MockDataSummary> {
+        let gql_ctx = ctx.data::<GraphQLContext>()?;
+        gql_ctx.require_permission("admin.system").await?;
+
+        let db_summary = persistence::reload_mock_data(&gql_ctx.pool)
+            .await
+            .map_err(|e| Error::new(format!("Failed to reload mock data: {}", e)))?;
+
+        let task_summary = seed_mock_tasks(gql_ctx)?;
+
+        Ok(MockDataSummary {
+            inventory_items: db_summary.items,
+            inventory_locations: db_summary.locations,
+            inventory_lots: db_summary.lots,
+            inventory_serial_units: db_summary.serial_units,
+            inventory_positions: db_summary.inventory_positions,
+            inventory_movements: db_summary.inventory_movements,
+            receiving_tasks: task_summary.receiving_tasks,
+            pick_tasks: task_summary.pick_tasks,
+            pack_tasks: task_summary.pack_tasks,
+            ship_tasks: task_summary.ship_tasks,
+        })
+    }
     /// Login with username and password.
     async fn login(
         &self,
@@ -286,6 +318,74 @@ impl Mutation {
             &format!("Activated user ID: {}", user_id),
             Some("user"),
             Some(&user_id.to_string()),
+            None,
+            None,
+            None,
+            None,
+        )
+        .await;
+
+        Ok(true)
+    }
+
+    /// Assign a role to a user (requires admin.roles permission).
+    async fn assign_role(&self, ctx: &Context<'_>, user_id: ID, role_id: ID) -> Result<bool> {
+        let gql_ctx = ctx.data::<GraphQLContext>()?;
+
+        // Check permission
+        gql_ctx.require_permission("admin.roles").await?;
+
+        let user_id: i64 = user_id.parse()
+            .map_err(|_| Error::new("Invalid user ID"))?;
+        let role_id: i64 = role_id.parse()
+            .map_err(|_| Error::new("Invalid role ID"))?;
+
+        let current_user = gql_ctx.require_user()?;
+        auth::assign_role(&gql_ctx.pool, user_id, role_id, Some(current_user.id))
+            .await
+            .map_err(|e| Error::new(format!("Failed to assign role: {}", e)))?;
+
+        let _ = record_audit_event(
+            &gql_ctx.pool,
+            Some(current_user.id),
+            AuditEventType::RoleAssigned,
+            &format!("Assigned role {} to user {}", role_id, user_id),
+            Some("user_role"),
+            Some(&format!("{}:{}", user_id, role_id)),
+            None,
+            None,
+            None,
+            None,
+        )
+        .await;
+
+        Ok(true)
+    }
+
+    /// Remove a role from a user (requires admin.roles permission).
+    async fn remove_role(&self, ctx: &Context<'_>, user_id: ID, role_id: ID) -> Result<bool> {
+        let gql_ctx = ctx.data::<GraphQLContext>()?;
+
+        // Check permission
+        gql_ctx.require_permission("admin.roles").await?;
+
+        let user_id: i64 = user_id.parse()
+            .map_err(|_| Error::new("Invalid user ID"))?;
+        let role_id: i64 = role_id.parse()
+            .map_err(|_| Error::new("Invalid role ID"))?;
+
+        auth::remove_role(&gql_ctx.pool, user_id, role_id)
+            .await
+            .map_err(|e| Error::new(format!("Failed to remove role: {}", e)))?;
+
+        let current_user = gql_ctx.require_user()?;
+        let _ = record_audit_event(
+            &gql_ctx.pool,
+            Some(current_user.id),
+            AuditEventType::RoleRemoved,
+            &format!("Removed role {} from user {}", role_id, user_id),
+            Some("user_role"),
+            Some(&format!("{}:{}", user_id, role_id)),
             None,
             None,
             None,
@@ -2569,4 +2669,160 @@ impl Mutation {
 
         Ok(ShipTask::from(updated_task))
     }
+}
+
+fn seed_mock_tasks(gql_ctx: &GraphQLContext) -> Result<MockTaskSummary> {
+    let supplier_id = mock_uuid(0x201)?;
+
+    let mut receiving_tasks = Vec::new();
+    let mut pick_tasks = Vec::new();
+    let mut pack_tasks = Vec::new();
+    let mut ship_tasks = Vec::new();
+
+    for index in 1..=20 {
+        let order_id = mock_uuid(0x300 + index as u16)?;
+        let order_line_id = mock_uuid(0x400 + index as u16)?;
+        let po_number = format!("PO-{:04}", index);
+        let mut purchase_order = PurchaseOrder::new(po_number, supplier_id);
+        purchase_order
+            .add_line(format!("SKU-{:03}", index), 5, 250.0)
+            .map_err(|e| Error::new(format!("Failed to add PO line: {}", e)))?;
+
+        let task_number = format!("RCV-{:04}", index);
+        let mut receiving_task = warehouse::receiving::ReceivingTask::from_purchase_order(
+            &purchase_order,
+            task_number,
+        )
+        .map_err(|e| Error::new(format!("Failed to build receiving task: {}", e)))?;
+
+        if index % 2 == 0 {
+            receiving_task
+                .start()
+                .map_err(|e| Error::new(format!("Failed to start receiving task: {}", e)))?;
+            if let Some(line_id) = receiving_task.lines.first().map(|line| line.id) {
+                receiving_task
+                    .record_receipt(line_id, 5)
+                    .map_err(|e| Error::new(format!("Failed to record receipt: {}", e)))?;
+                receiving_task
+                    .record_qc_result(
+                        line_id,
+                        warehouse::receiving::QCOutcome::Pass,
+                        "Inspector".to_string(),
+                        None,
+                    )
+                    .map_err(|e| Error::new(format!("Failed to record QC result: {}", e)))?;
+            }
+        }
+
+        receiving_tasks.push(receiving_task);
+
+        let mut pick_task = warehouse::picking::PickTask::new(
+            format!("PICK-{:04}", index),
+            warehouse::picking::PickTaskType::SingleOrder,
+            vec![order_id],
+        )
+        .map_err(|e| Error::new(format!("Failed to create pick task: {}", e)))?;
+        pick_task
+            .add_line(
+                order_line_id,
+                format!("SKU-{:03}", index),
+                format!("LOC-{:03}", index),
+                5,
+            )
+            .map_err(|e| Error::new(format!("Failed to add pick line: {}", e)))?;
+
+        let pick_line_id = pick_task
+            .lines
+            .first()
+            .map(|line| line.id)
+            .ok_or_else(|| Error::new("Pick task has no lines"))?;
+
+        let mut pack_task = warehouse::packing::PackTask::new(
+            format!("PACK-{:04}", index),
+            pick_task.id,
+            order_id,
+        );
+        pack_task
+            .add_line(pick_line_id, format!("SKU-{:03}", index), 5)
+            .map_err(|e| Error::new(format!("Failed to add pack line: {}", e)))?;
+        pack_task
+            .start("Casey".to_string())
+            .map_err(|e| Error::new(format!("Failed to start pack task: {}", e)))?;
+        let package_id = pack_task
+            .create_package(format!("PKG-{:04}", index), "Carton-A".to_string())
+            .map_err(|e| Error::new(format!("Failed to create package: {}", e)))?;
+        let pack_line_id = pack_task
+            .lines
+            .first()
+            .map(|line| line.id)
+            .ok_or_else(|| Error::new("Pack task has no lines"))?;
+        pack_task
+            .record_pack(pack_line_id, package_id, 5, None)
+            .map_err(|e| Error::new(format!("Failed to record pack: {}", e)))?;
+
+        let mut ship_task = warehouse::shipping::ShipTask::new(format!("SHIP-{:04}", index));
+        ship_task
+            .add_line(pack_task.id, vec![package_id], order_id)
+            .map_err(|e| Error::new(format!("Failed to add ship line: {}", e)))?;
+        ship_task
+            .start("Robin".to_string())
+            .map_err(|e| Error::new(format!("Failed to start ship task: {}", e)))?;
+        let _ = ship_task.evaluate_compliance();
+
+        pick_tasks.push(pick_task);
+        pack_tasks.push(pack_task);
+        ship_tasks.push(ship_task);
+    }
+
+    let mut receiving_store = gql_ctx
+        .receiving_tasks
+        .write()
+        .map_err(|_| Error::new("Failed to lock receiving tasks"))?;
+    receiving_store.clear();
+    for task in receiving_tasks {
+        receiving_store.insert(task.id, task);
+    }
+    drop(receiving_store);
+
+    let mut pick_store = gql_ctx
+        .pick_tasks
+        .write()
+        .map_err(|_| Error::new("Failed to lock pick tasks"))?;
+    pick_store.clear();
+    for task in pick_tasks {
+        pick_store.insert(task.id, task);
+    }
+    drop(pick_store);
+
+    let mut pack_store = gql_ctx
+        .pack_tasks
+        .write()
+        .map_err(|_| Error::new("Failed to lock pack tasks"))?;
+    pack_store.clear();
+    for task in pack_tasks {
+        pack_store.insert(task.id, task);
+    }
+    drop(pack_store);
+
+    let mut ship_store = gql_ctx
+        .ship_tasks
+        .write()
+        .map_err(|_| Error::new("Failed to lock ship tasks"))?;
+    ship_store.clear();
+    for task in ship_tasks {
+        ship_store.insert(task.id, task);
+    }
+    drop(ship_store);
+
+    Ok(MockTaskSummary {
+        receiving_tasks: 20,
+        pick_tasks: 20,
+        pack_tasks: 20,
+        ship_tasks: 20,
+    })
+}
+
+fn mock_uuid(suffix: u16) -> Result<Uuid> {
+    let value = format!("00000000-0000-0000-0000-00000000{:04x}", suffix);
+    Uuid::parse_str(&value).map_err(|_| Error::new("Failed to parse mock UUID"))
 }

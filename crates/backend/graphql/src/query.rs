@@ -1,12 +1,12 @@
 //! GraphQL Query root.
 
 use async_graphql::*;
-use auth::{SqliteUserRepository, UserRepository};
+use auth::{Role as AuthRole, SqliteUserRepository, UserRepository};
 use uuid::Uuid;
 
 use crate::context::GraphQLContext;
 use crate::types::{
-    CycleCountSession, HealthResponse, InventoryMovement, InventoryPosition, Item,
+    CycleCountSession, HealthResponse, InventoryMovement, InventoryPosition, Item, Role,
     LotGenealogyEntry, Location, SerialGenealogyEntry, User, ReceivingTask, ReceivingTaskStatus,
     PaginationInput, PageInfo, ItemConnection, ItemEdge,
     PickTask, PickTaskStatus, PackTask, PackTaskStatus,
@@ -81,6 +81,23 @@ impl Query {
         .map_err(|e| Error::new(format!("Failed to list users: {}", e)))?;
 
         Ok(users.into_iter().map(User::from).collect())
+    }
+
+    /// List all roles (requires admin.roles permission).
+    async fn roles(&self, ctx: &Context<'_>) -> Result<Vec<Role>> {
+        let gql_ctx = ctx.data::<GraphQLContext>()?;
+
+        // Check permission
+        gql_ctx.require_permission("admin.roles").await?;
+
+        let roles = sqlx::query_as::<_, AuthRole>(
+            "SELECT id, name, description, created_at, updated_at FROM roles ORDER BY name"
+        )
+        .fetch_all(gql_ctx.pool.inner())
+        .await
+        .map_err(|e| Error::new(format!("Failed to list roles: {}", e)))?;
+
+        Ok(roles.into_iter().map(Role::from).collect())
     }
 
     /// Get a cycle count session by ID, with lines via subfield.

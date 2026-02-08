@@ -115,6 +115,31 @@ pub struct LoginResponse {
     pub token: String,
 }
 
+/// Summary of mock data reload results.
+#[derive(SimpleObject)]
+pub struct MockDataSummary {
+    #[graphql(name = "inventoryItems")]
+    pub inventory_items: i64,
+    #[graphql(name = "inventoryLocations")]
+    pub inventory_locations: i64,
+    #[graphql(name = "inventoryLots")]
+    pub inventory_lots: i64,
+    #[graphql(name = "inventorySerialUnits")]
+    pub inventory_serial_units: i64,
+    #[graphql(name = "inventoryPositions")]
+    pub inventory_positions: i64,
+    #[graphql(name = "inventoryMovements")]
+    pub inventory_movements: i64,
+    #[graphql(name = "receivingTasks")]
+    pub receiving_tasks: i64,
+    #[graphql(name = "pickTasks")]
+    pub pick_tasks: i64,
+    #[graphql(name = "packTasks")]
+    pub pack_tasks: i64,
+    #[graphql(name = "shipTasks")]
+    pub ship_tasks: i64,
+}
+
 /// Passkey challenge response for WebAuthn.
 #[derive(SimpleObject)]
 pub struct PasskeyChallenge {
