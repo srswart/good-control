@@ -80,6 +80,53 @@ pub async fn auth_middleware(
     Ok(next.run(req).await)
 }
 
+/// Middleware function to optionally authenticate requests.
+///
+/// If a Bearer token is present, it is validated and the CurrentUser is set.
+/// If no token is present, the request continues unauthenticated.
+pub async fn optional_auth_middleware(
+    mut req: Request,
+    next: Next,
+) -> Result<Response, AuthError> {
+    // Extract auth layer from extensions
+    let auth_layer = req.extensions()
+        .get::<Arc<AuthLayer>>()
+        .ok_or_else(|| AuthError::Internal("AuthLayer not found in extensions".to_string()))?
+        .clone();
+
+    // Extract token from Authorization header (optional)
+    let token = req.headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|h| h.to_str().ok())
+        .and_then(|h| h.strip_prefix("Bearer "));
+
+    if let Some(token) = token {
+        // Validate session
+        let session_manager = SessionManager::new(auth_layer.pool().clone());
+        let session = session_manager.validate_session(token).await?;
+
+        // Get user from session
+        let user = sqlx::query_as::<_, User>(
+            "SELECT id, username, email, password_hash, is_active, last_login_at, created_at, updated_at 
+             FROM users WHERE id = ?"
+        )
+        .bind(session.user_id)
+        .fetch_one(auth_layer.pool().inner())
+        .await
+        .map_err(|_| AuthError::UserNotFound(session.user_id.to_string()))?;
+
+        // Check if user is active
+        if !user.is_active {
+            return Err(AuthError::InvalidCredentials);
+        }
+
+        // Insert current user into request extensions
+        req.extensions_mut().insert(CurrentUser { user, session });
+    }
+
+    Ok(next.run(req).await)
+}
+
 /// Extract CurrentUser from request parts.
 impl<S> FromRequestParts<S> for CurrentUser
 where
@@ -245,6 +292,69 @@ mod tests {
             .unwrap();
 
         assert_eq!(response.status(), StatusCode::UNAUTHORIZED);
+
+        pool.close().await;
+    }
+
+    #[tokio::test]
+    async fn test_optional_auth_middleware_without_token_allows_request() {
+        let pool = create_test_pool().await;
+
+        async fn public_handler() -> &'static str {
+            "public"
+        }
+
+        let auth_layer = Arc::new(AuthLayer::new(pool.clone()));
+        let app = Router::new()
+            .route("/public", get(public_handler))
+            .layer(middleware::from_fn(optional_auth_middleware))
+            .layer(axum::Extension(auth_layer));
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/public")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
+
+        pool.close().await;
+    }
+
+    #[tokio::test]
+    async fn test_optional_auth_middleware_with_token_injects_user() {
+        let pool = create_test_pool().await;
+        let user_repo = SqliteUserRepository::new(pool.clone());
+
+        let user = user_repo.create("testuser", "test@example.com", "password").await.unwrap();
+        let session = create_session(&pool, user.id, None, None).await.unwrap();
+
+        async fn protected_handler(current_user: CurrentUser) -> String {
+            format!("Hello, {}!", current_user.user.username)
+        }
+
+        let auth_layer = Arc::new(AuthLayer::new(pool.clone()));
+        let app = Router::new()
+            .route("/protected", get(protected_handler))
+            .layer(middleware::from_fn(optional_auth_middleware))
+            .layer(axum::Extension(auth_layer));
+
+        let response = app
+            .oneshot(
+                Request::builder()
+                    .uri("/protected")
+                    .header("Authorization", format!("Bearer {}", session.token))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::OK);
 
         pool.close().await;
     }

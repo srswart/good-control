@@ -1,0 +1,9 @@
+target
+.git
+.github
+.cursor
+node_modules
+data
+output
+assets/ui/dist
+**/*.db

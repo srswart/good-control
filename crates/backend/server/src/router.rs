@@ -1,14 +1,22 @@
 //! Router configuration.
 
 use axum::Router;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 
 use crate::health;
 
 /// Create the application router with all routes and middleware.
 pub fn create_router() -> Router {
+    // Configure CORS to allow requests from the desktop app
+    let cors = CorsLayer::new()
+        .allow_origin(Any)
+        .allow_methods(Any)
+        .allow_headers(Any);
+
     Router::new()
         .merge(health::routes())
+        .layer(cors)
         .layer(TraceLayer::new_for_http())
 }
 

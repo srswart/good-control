@@ -24,6 +24,8 @@ thiserror = { workspace = true }
 
 # Internal crates
 foundation = { workspace = true }
+warehouse = { workspace = true }
+procurement = { workspace = true }
 
 # Utilities
 uuid = { version = "1.10", features = ["v4"] }

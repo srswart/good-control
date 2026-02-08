@@ -8,6 +8,7 @@
 
 pub mod router;
 pub mod health;
+pub mod graphql_router;
 
 pub use router::create_router;
 pub use health::health_check;

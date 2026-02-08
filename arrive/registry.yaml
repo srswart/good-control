@@ -1,7 +1,7 @@
 # ARRIVE Registry - Repo-wide defaults and shared configuration
 registry:
   repo_id: drone-inventory
-  name: "Industrial Drone Inventory Management"
+  name: "Controlled Goods Inventory Management"
   description: "Inventory + WMS + compliance workflow system for industrial drones (EN+ZH), with optional Kingdee Cloud financial integration."
 
 defaults:
@@ -40,6 +40,8 @@ vocabulary:
     - docs:updated
     - tdd:red-green
     - tidy:preparatory
+    - database:migration
+    - security:scan
 
 systems:
   - backend

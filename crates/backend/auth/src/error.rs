@@ -43,5 +43,9 @@ pub enum AuthError {
     /// Internal error.
     #[error("internal error: {0}")]
     Internal(String),
+
+    /// Configuration error.
+    #[error("configuration error: {0}")]
+    Configuration(String),
 }
 

@@ -55,6 +55,6 @@ mod tests {
         let mut mutations = Mutations::default();
         vdom.rebuild(&mut mutations);
         let html = dioxus_ssr::render(&vdom);
-        assert!(html.contains("Controlled Goods SCM"));
+        assert!(html.contains("DS Examples"));
     }
 }

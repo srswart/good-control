@@ -4,6 +4,8 @@ use dioxus::prelude::*;
 use crate::routes::Route;
 use crate::language::use_locale;
 use crate::i18n::t;
+use crate::brand::BrandColors;
+use crate::session::Session;
 
 /// Navigation item definition
 #[derive(Clone, PartialEq, Debug)]
@@ -49,14 +51,15 @@ pub fn Navigation(
                 dioxus_router::Link {
                     to: item.route.clone(),
                     class: if current_route == item.route {
-                        "block w-full text-left py-3 rounded-r-lg text-sm font-medium transition-all duration-200 bg-gradient-to-r from-blue-600 to-blue-700 shadow-md shadow-blue-500/30 border-l-4 border-blue-400"
+                        "block w-full text-left py-3 rounded-r-lg text-sm font-medium transition-all duration-200 shadow-md border-l-4"
                     } else {
-                        "block w-full text-left py-3 rounded-r-lg text-sm font-medium transition-all duration-200 text-gray-700 hover:text-gray-900 hover:bg-gray-50 hover:border-l-4 hover:border-gray-300 active:bg-gray-100"
+                        "block w-full text-left py-3 rounded-r-lg text-sm font-medium transition-all duration-200 hover:border-l-4"
                     },
                     style: if current_route == item.route {
-                        "display: block; width: 100%; text-align: left; padding-left: 1rem; padding-right: 1rem; color: white !important; background: linear-gradient(to right, #2563eb, #1d4ed8) !important; border-left: 4px solid #60a5fa !important;"
+                        format!("display: block; width: 100%; text-align: left; padding-left: 1rem; padding-right: 1rem; color: {} !important; background: linear-gradient(to right, {}, {}) !important; border-left: 4px solid {} !important;",
+                            BrandColors::NAVY, BrandColors::MINT, BrandColors::MINT_DARK, BrandColors::CORAL)
                     } else {
-                        "display: block; width: 100%; text-align: left; padding-left: 1rem; padding-right: 1rem; color: #374151 !important; background: white !important; border-left: none !important;"
+                        format!("display: block; width: 100%; text-align: left; padding-left: 1rem; padding-right: 1rem; color: #e2e8f0 !important; background: transparent !important; border-left: none !important;")
                     },
                     {
                         // Translate the label based on route
@@ -97,6 +100,14 @@ pub fn default_nav_items() -> Vec<NavItem> {
         NavItem::new(Route::Reporting {}, "Reporting"),
         NavItem::new(Route::Integrations {}, "Integrations"),
     ]
+}
+
+/// Default navigation items filtered by session access.
+pub fn nav_items_for_session(session: &Session) -> Vec<NavItem> {
+    default_nav_items()
+        .into_iter()
+        .filter(|item| session.can_access_route(&item.route))
+        .collect()
 }
 
 #[cfg(test)]

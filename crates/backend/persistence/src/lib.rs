@@ -14,14 +14,17 @@ mod migrations;
 mod pool;
 mod repository;
 mod transaction;
+mod warehouse_service;
 
 pub use error::{PersistenceError, Result};
 pub use inventory_repository::{
-    InventoryMovementRecord, InventoryPositionRecord, InventoryRepository, ItemRecord,
-    LocationRecord, SqliteInventoryRepository,
+    get_current_position, get_lot_genealogy_by_number, get_lot_shipments_by_number,
+    get_serial_genealogy, get_serial_shipments, InventoryMovementRecord, InventoryPositionRecord,
+    InventoryRepository, ItemRecord, LocationRecord, SqliteInventoryRepository,
 };
 pub use inventory_service::InventoryService;
 pub use migrations::run_migrations;
 pub use pool::{DbPool, DbPoolConfig};
 pub use repository::Repository;
 pub use transaction::begin_transaction;
+pub use warehouse_service::WarehouseService;

@@ -5,7 +5,6 @@
 use crate::error::Result;
 use async_trait::async_trait;
 use sqlx::SqlitePool;
-use std::borrow::Cow;
 
 /// Item record (items table)
 #[derive(Debug, Clone, sqlx::FromRow)]

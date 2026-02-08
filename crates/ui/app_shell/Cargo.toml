@@ -16,8 +16,19 @@ ui-warehouse = { workspace = true }
 ui-logistics = { workspace = true }
 ui-procurement-orders = { workspace = true }
 shared = { workspace = true }
-dioxus = { version = "0.7", features = ["desktop", "router"] }
 dioxus-router = "0.7"
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Platform-specific Dioxus features
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+dioxus = { version = "0.7", features = ["desktop", "router"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+dioxus = { version = "0.7", features = ["web", "router"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
 
 [dev-dependencies]
 dioxus-ssr = "0.7"

@@ -1,0 +1,12 @@
+[application]
+name = "inventory-web"
+default_platform = "web"
+out_dir = "dist"
+
+[web.app]
+asset_dir = "assets"
+title = "Controlled Goods SCM"
+
+[web.watcher]
+watch_path = ["src", "../../crates/ui"]
+

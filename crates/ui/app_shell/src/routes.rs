@@ -2,9 +2,12 @@
 
 use dioxus::prelude::*;
 use crate::layout::AppLayout;
+use crate::login::LoginView;
 use crate::language::use_locale;
 use crate::i18n::t;
-use ui_inventory::{ItemsList, StockView, TraceabilityView, CycleCountsView};
+use crate::logo::{Logo, LogoSize};
+use crate::brand::BrandColors;
+use ui_inventory::{ItemsList, StockView, TraceabilityView, CycleCountsView, GraphQLDemo};
 use ui_assets::{DronesView, BatteriesView};
 use ui_compliance::{ApprovalsView, DocPacksView, BlockingReasonsView};
 use ui_warehouse::{ReceivingView, PutawayView, PickView, PackView, ShipView};
@@ -15,6 +18,9 @@ use ui_procurement_orders::{PurchaseOrdersView, AllocationsView, FulfillmentView
 #[derive(Routable, Clone, PartialEq, Debug)]
 #[rustfmt::skip]
 pub enum Route {
+    #[route("/login")]
+    Login {},
+
     #[layout(AppLayout)]
     #[route("/")]
     Home {},
@@ -56,19 +62,88 @@ pub enum Route {
 pub fn Home() -> Element {
     let locale_signal = use_locale();
     let current_locale = *locale_signal.read();
-    
+
     rsx! {
         div {
-            class: "bg-white rounded-lg shadow p-8",
-            h2 {
-                class: "text-xl font-semibold text-gray-800 mb-4",
-                {t(current_locale, "welcome")}
+            class: "min-h-full flex flex-col items-center justify-center",
+            // Hero section with logo
+            div {
+                class: "rounded-2xl shadow-2xl p-12 mb-8 text-center",
+                style: format!("background: linear-gradient(135deg, {} 0%, {} 100%);",
+                    BrandColors::NAVY, BrandColors::NAVY_LIGHT),
+                div {
+                    class: "mb-6 flex justify-center",
+                    Logo {
+                        size: LogoSize::Large,
+                        show_stripes: true,
+                    }
+                }
+                h2 {
+                    class: "text-3xl font-bold mb-4",
+                    style: format!("color: {};", BrandColors::MINT),
+                    {t(current_locale, "welcome")}
+                }
+                p {
+                    class: "text-lg text-gray-300 max-w-2xl mx-auto",
+                    {t(current_locale, "coming_soon")}
+                }
             }
-            p {
-                class: "text-gray-600",
-                {t(current_locale, "coming_soon")}
+
+            // Feature cards
+            div {
+                class: "grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl",
+                // Inventory card
+                div {
+                    class: "bg-white rounded-lg shadow-lg p-6 border-t-4",
+                    style: format!("border-color: {};", BrandColors::MINT),
+                    h3 {
+                        class: "text-xl font-bold mb-2",
+                        style: format!("color: {};", BrandColors::NAVY),
+                        {t(current_locale, "inventory")}
+                    }
+                    p {
+                        class: "text-gray-600",
+                        "Track and manage your inventory positions with real-time visibility."
+                    }
+                }
+                // Warehouse card
+                div {
+                    class: "bg-white rounded-lg shadow-lg p-6 border-t-4",
+                    style: format!("border-color: {};", BrandColors::CORAL),
+                    h3 {
+                        class: "text-xl font-bold mb-2",
+                        style: format!("color: {};", BrandColors::NAVY),
+                        {t(current_locale, "warehouse")}
+                    }
+                    p {
+                        class: "text-gray-600",
+                        "Streamline receiving, putaway, picking, packing, and shipping operations."
+                    }
+                }
+                // Compliance card
+                div {
+                    class: "bg-white rounded-lg shadow-lg p-6 border-t-4",
+                    style: format!("border-color: {};", BrandColors::MINT),
+                    h3 {
+                        class: "text-xl font-bold mb-2",
+                        style: format!("color: {};", BrandColors::NAVY),
+                        {t(current_locale, "compliance")}
+                    }
+                    p {
+                        class: "text-gray-600",
+                        "Manage approvals, documentation, and regulatory compliance."
+                    }
+                }
             }
         }
+    }
+}
+
+/// Login route component
+#[component]
+pub fn Login() -> Element {
+    rsx! {
+        LoginView {}
     }
 }
 
@@ -136,9 +211,18 @@ pub fn Inventory() -> Element {
                         onclick: move |_| active_tab.set("cycle_counts".to_string()),
                         {t(current_locale, "cycle_counts")}
                     }
+                    button {
+                        class: if active_tab() == "graphql_demo" {
+                            "px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600"
+                        } else {
+                            "px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700"
+                        },
+                        onclick: move |_| active_tab.set("graphql_demo".to_string()),
+                        "GraphQL Demo"
+                    }
                 }
             }
-            
+
             // Tab content
             if active_tab() == "items" {
                 ItemsList {}
@@ -148,6 +232,8 @@ pub fn Inventory() -> Element {
                 TraceabilityView {}
             } else if active_tab() == "cycle_counts" {
                 CycleCountsView {}
+            } else if active_tab() == "graphql_demo" {
+                GraphQLDemo {}
             }
         }
     }

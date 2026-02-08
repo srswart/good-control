@@ -1,0 +1,35 @@
+component:
+  id: ui-automation
+  name: "UI Automation Testing (Playwright + Dioxus Web)"
+  type: crosscutting
+  owners:
+    - team: inventory
+  stage: incubating
+
+selectors:
+  paths:
+    - "tests/ui/**"
+    - "apps/web/**"
+    - "crates/ui/test-utils/**"
+  build_modules: []
+  tags: []
+  contracts: []
+
+interfaces:
+#  - name: "UI Test Runner"
+#    description: "Automated UI testing infrastructure using Playwright"
+#    operations:
+#      - name: "run_ui_tests"
+#        description: "Execute UI test suite against running web application"
+#      - name: "run_ui_tests_headless"
+#        description: "Execute UI tests in headless mode for CI/CD"
+#      - name: "run_ui_tests_debug"
+#        description: "Execute UI tests with browser visible for debugging"
+
+invariants:
+ # - "All UI features must have corresponding automated tests"
+ # - "Tests must be runnable in both headed and headless modes"
+ # - "Tests must support multiple locales (EN, ZH)"
+ # - "Tests must be independent and idempotent"
+ # - "Test data must be isolated and cleaned up after each test"
+

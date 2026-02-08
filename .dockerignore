@@ -1,0 +1,15 @@
+target
+.git
+.github
+.cursor
+node_modules
+.venv
+data
+output
+assets/ui/dist
+apps/web/dist
+**/*.db
+tests/ui/node_modules
+tests/ui/playwright-report
+assets/ui/node_modules
+.cfu

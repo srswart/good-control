@@ -8,7 +8,13 @@ license.workspace = true
 
 [dependencies]
 ui-foundation = { workspace = true }
+
+# Platform-specific Dioxus features
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 dioxus = { version = "0.7", features = ["desktop"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+dioxus = { version = "0.7", features = ["web"] }
 
 [dev-dependencies]
 dioxus-ssr = "0.7"

@@ -1,0 +1,30 @@
+app = "good-control-api"
+primary_region = "bom"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  APP__SERVER__HOST = "0.0.0.0"
+  APP__SERVER__PORT = "3000"
+  APP__LOG_LEVEL = "info"
+  APP__DATABASE__URL = "sqlite:/data/drone-inventory.db"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    interval = "10s"
+    timeout = "2s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/health"
+
+[[mounts]]
+  source = "inventory_data"
+  destination = "/data"

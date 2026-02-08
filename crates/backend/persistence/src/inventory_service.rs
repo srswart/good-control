@@ -5,10 +5,8 @@ use uuid::Uuid;
 
 use crate::error::{PersistenceError, Result};
 use crate::inventory_repository::{
-    InventoryMovementRecord, InventoryPositionRecord, InventoryRepository, ItemRecord,
-    LocationRecord, SqliteInventoryRepository,
+    InventoryPositionRecord, SqliteInventoryRepository,
 };
-use sqlx::Acquire;
 
 /// Inventory service for coordinating multi-step operations.
 pub struct InventoryService {
@@ -492,12 +490,381 @@ impl InventoryService {
         tx.commit().await?;
         Ok((reserve_id, ship_id))
     }
+
+    /// Receive inventory atomically (add stock to inventory positions).
+    ///
+    /// This operation:
+    /// 1. Gets or creates an inventory position for the SKU/location
+    /// 2. Updates position to add quantity to on-hand and available
+    /// 3. Records a receipt movement in the ledger
+    ///
+    /// All steps are atomic - if any step fails, the entire operation is rolled back.
+    pub async fn receive_inventory(
+        &self,
+        sku: &str,
+        location_id: &str,
+        quantity: i64,
+        actor: &str,
+        reference: Option<String>,
+    ) -> Result<String> {
+        if quantity <= 0 {
+            return Err(PersistenceError::Generic(
+                "Receipt quantity must be positive".to_string(),
+            ));
+        }
+
+        let mut tx = self.pool.begin().await?;
+            // Get or create position for available status
+            let position_result = sqlx::query_as::<_, InventoryPositionRecord>(
+                r#"
+                SELECT * FROM inventory_positions
+                WHERE sku = ? AND location_id = ? AND status = 'available' AND lot_id IS NULL
+                "#,
+            )
+            .bind(sku)
+            .bind(location_id)
+            .fetch_optional(&mut *tx)
+            .await?;
+
+            let _position_id = if let Some(pos) = position_result {
+                // Update existing position
+                let new_on_hand = pos.quantity_on_hand + quantity;
+                let new_available = new_on_hand - pos.quantity_reserved;
+
+                sqlx::query(
+                    r#"
+                    UPDATE inventory_positions
+                    SET quantity_on_hand = ?,
+                        quantity_available = ?,
+                        last_updated = datetime('now')
+                    WHERE id = ?
+                    "#,
+                )
+                .bind(new_on_hand)
+                .bind(new_available)
+                .bind(&pos.id)
+                .execute(&mut *tx)
+                .await?;
+
+                pos.id
+            } else {
+                // Create new position
+                let position_id = Uuid::new_v4().to_string();
+                sqlx::query(
+                    r#"
+                    INSERT INTO inventory_positions (
+                        id, sku, location_id, status, quantity_on_hand, quantity_reserved, quantity_available, last_updated
+                    )
+                    VALUES (?, ?, ?, 'available', ?, 0, ?, datetime('now'))
+                    "#,
+                )
+                .bind(&position_id)
+                .bind(sku)
+                .bind(location_id)
+                .bind(quantity)
+                .bind(quantity)
+                .execute(&mut *tx)
+                .await?;
+
+                position_id
+            };
+
+            // Record receipt movement
+            let movement_id = Uuid::new_v4().to_string();
+            sqlx::query(
+                r#"
+                INSERT INTO inventory_movements (
+                    id, timestamp, actor, reason, from_location_id, to_location_id,
+                    sku, quantity, status_before, status_after, reference
+                )
+                VALUES (?, datetime('now'), ?, 'receipt', NULL, ?, ?, ?, 'available', 'available', ?)
+                "#,
+            )
+            .bind(&movement_id)
+            .bind(actor)
+            .bind(location_id)
+            .bind(sku)
+            .bind(quantity)
+            .bind(&reference)
+            .execute(&mut *tx)
+            .await?;
+
+        tx.commit().await?;
+        Ok(movement_id)
+    }
+
+    /// Transfer inventory between locations atomically.
+    ///
+    /// This operation:
+    /// 1. Decrements quantity from source location
+    /// 2. Increments quantity at destination location
+    /// 3. Records a transfer movement
+    ///
+    /// All steps are atomic - if any step fails, the entire operation is rolled back.
+    pub async fn transfer_inventory(
+        &self,
+        sku: &str,
+        from_location_id: &str,
+        to_location_id: &str,
+        quantity: i64,
+        actor: &str,
+        reference: Option<String>,
+    ) -> Result<String> {
+        if quantity <= 0 {
+            return Err(PersistenceError::Generic(
+                "Transfer quantity must be positive".to_string(),
+            ));
+        }
+
+        let mut tx = self.pool.begin().await?;
+
+        // Get source position
+        let from_position: InventoryPositionRecord = sqlx::query_as(
+            r#"
+            SELECT * FROM inventory_positions
+            WHERE sku = ? AND location_id = ? AND status = 'available' AND lot_id IS NULL
+            "#,
+        )
+        .bind(sku)
+        .bind(from_location_id)
+        .fetch_optional(&mut *tx)
+        .await?
+        .ok_or_else(|| {
+            PersistenceError::Generic(format!(
+                "No available inventory found for SKU {} at location {}",
+                sku, from_location_id
+            ))
+        })?;
+
+        // Check sufficient quantity
+        if from_position.quantity_available < quantity {
+            return Err(PersistenceError::Generic(format!(
+                "Insufficient inventory: requested {}, available {}",
+                quantity, from_position.quantity_available
+            )));
+        }
+
+        // Update source position
+        let new_from_on_hand = from_position.quantity_on_hand - quantity;
+        let new_from_available = new_from_on_hand - from_position.quantity_reserved;
+
+        sqlx::query(
+            r#"
+            UPDATE inventory_positions
+            SET quantity_on_hand = ?,
+                quantity_available = ?,
+                last_updated = datetime('now')
+            WHERE id = ?
+            "#,
+        )
+        .bind(new_from_on_hand)
+        .bind(new_from_available)
+        .bind(&from_position.id)
+        .execute(&mut *tx)
+        .await?;
+
+        // Get or create destination position
+        let to_position_result = sqlx::query_as::<_, InventoryPositionRecord>(
+            r#"
+            SELECT * FROM inventory_positions
+            WHERE sku = ? AND location_id = ? AND status = 'available' AND lot_id IS NULL
+            "#,
+        )
+        .bind(sku)
+        .bind(to_location_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        if let Some(to_pos) = to_position_result {
+            // Update existing position
+            let new_to_on_hand = to_pos.quantity_on_hand + quantity;
+            let new_to_available = new_to_on_hand - to_pos.quantity_reserved;
+
+            sqlx::query(
+                r#"
+                UPDATE inventory_positions
+                SET quantity_on_hand = ?,
+                    quantity_available = ?,
+                    last_updated = datetime('now')
+                WHERE id = ?
+                "#,
+            )
+            .bind(new_to_on_hand)
+            .bind(new_to_available)
+            .bind(&to_pos.id)
+            .execute(&mut *tx)
+            .await?;
+        } else {
+            // Create new position
+            let position_id = Uuid::new_v4().to_string();
+            sqlx::query(
+                r#"
+                INSERT INTO inventory_positions (
+                    id, sku, location_id, status, quantity_on_hand, quantity_reserved, quantity_available, last_updated
+                )
+                VALUES (?, ?, ?, 'available', ?, 0, ?, datetime('now'))
+                "#,
+            )
+            .bind(&position_id)
+            .bind(sku)
+            .bind(to_location_id)
+            .bind(quantity)
+            .bind(quantity)
+            .execute(&mut *tx)
+            .await?;
+        }
+
+        // Record transfer movement
+        let movement_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"
+            INSERT INTO inventory_movements (
+                id, timestamp, actor, reason, from_location_id, to_location_id,
+                sku, quantity, status_before, status_after, reference
+            )
+            VALUES (?, datetime('now'), ?, 'transfer', ?, ?, ?, ?, 'available', 'available', ?)
+            "#,
+        )
+        .bind(&movement_id)
+        .bind(actor)
+        .bind(from_location_id)
+        .bind(to_location_id)
+        .bind(sku)
+        .bind(quantity)
+        .bind(&reference)
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(movement_id)
+    }
+
+    /// Adjust inventory quantity atomically (for corrections, cycle counts, etc.).
+    ///
+    /// This operation:
+    /// 1. Updates the inventory position with the adjustment
+    /// 2. Records an adjustment movement
+    ///
+    /// Positive quantity = increase, negative quantity = decrease.
+    /// All steps are atomic - if any step fails, the entire operation is rolled back.
+    pub async fn adjust_inventory(
+        &self,
+        sku: &str,
+        location_id: &str,
+        quantity: i64,
+        reason: &str,
+        actor: &str,
+        reference: Option<String>,
+    ) -> Result<String> {
+        if quantity == 0 {
+            return Err(PersistenceError::Generic(
+                "Adjustment quantity cannot be zero".to_string(),
+            ));
+        }
+
+        let mut tx = self.pool.begin().await?;
+
+        // Get or create position
+        let position_result = sqlx::query_as::<_, InventoryPositionRecord>(
+            r#"
+            SELECT * FROM inventory_positions
+            WHERE sku = ? AND location_id = ? AND status = 'available' AND lot_id IS NULL
+            "#,
+        )
+        .bind(sku)
+        .bind(location_id)
+        .fetch_optional(&mut *tx)
+        .await?;
+
+        let _position_id = if let Some(pos) = position_result {
+            // Update existing position
+            let new_on_hand = pos.quantity_on_hand + quantity;
+
+            // Prevent negative inventory
+            if new_on_hand < 0 {
+                return Err(PersistenceError::Generic(format!(
+                    "Adjustment would result in negative inventory: current {}, adjustment {}",
+                    pos.quantity_on_hand, quantity
+                )));
+            }
+
+            let new_available = new_on_hand - pos.quantity_reserved;
+
+            sqlx::query(
+                r#"
+                UPDATE inventory_positions
+                SET quantity_on_hand = ?,
+                    quantity_available = ?,
+                    last_updated = datetime('now')
+                WHERE id = ?
+                "#,
+            )
+            .bind(new_on_hand)
+            .bind(new_available)
+            .bind(&pos.id)
+            .execute(&mut *tx)
+            .await?;
+
+            pos.id
+        } else {
+            // Create new position (only if adjustment is positive)
+            if quantity < 0 {
+                return Err(PersistenceError::Generic(format!(
+                    "Cannot adjust non-existent inventory for SKU {} at location {}",
+                    sku, location_id
+                )));
+            }
+
+            let position_id = Uuid::new_v4().to_string();
+            sqlx::query(
+                r#"
+                INSERT INTO inventory_positions (
+                    id, sku, location_id, status, quantity_on_hand, quantity_reserved, quantity_available, last_updated
+                )
+                VALUES (?, ?, ?, 'available', ?, 0, ?, datetime('now'))
+                "#,
+            )
+            .bind(&position_id)
+            .bind(sku)
+            .bind(location_id)
+            .bind(quantity)
+            .bind(quantity)
+            .execute(&mut *tx)
+            .await?;
+
+            position_id
+        };
+
+        // Record adjustment movement
+        let movement_id = Uuid::new_v4().to_string();
+        sqlx::query(
+            r#"
+            INSERT INTO inventory_movements (
+                id, timestamp, actor, reason, from_location_id, to_location_id,
+                sku, quantity, status_before, status_after, reference, notes
+            )
+            VALUES (?, datetime('now'), ?, 'adjustment', NULL, ?, ?, ?, 'available', 'available', ?, ?)
+            "#,
+        )
+        .bind(&movement_id)
+        .bind(actor)
+        .bind(location_id)
+        .bind(sku)
+        .bind(quantity)
+        .bind(&reference)
+        .bind(reason)
+        .execute(&mut *tx)
+        .await?;
+
+        tx.commit().await?;
+        Ok(movement_id)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{DbPool, DbPoolConfig};
+    use crate::{DbPool, DbPoolConfig, ItemRecord, LocationRecord, InventoryMovementRecord};
     use chrono::Utc;
 
     async fn setup_test_service() -> (SqlitePool, InventoryService) {
@@ -609,6 +976,122 @@ mod tests {
         .execute(pool)
         .await
         .unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_receive_inventory_new_position() {
+        let (pool, service) = setup_test_service().await;
+        let location_id = Uuid::new_v4().to_string();
+
+        create_test_item_and_location(&pool, "TEST-RECV-001", &location_id).await;
+
+        let result = service
+            .receive_inventory("TEST-RECV-001", &location_id, 50, "operator1", Some("RECV-001".to_string()))
+            .await;
+
+        assert!(result.is_ok());
+
+        // Verify position created
+        let position: InventoryPositionRecord =
+            sqlx::query_as("SELECT * FROM inventory_positions WHERE sku = ? AND location_id = ?")
+                .bind("TEST-RECV-001")
+                .bind(&location_id)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+
+        assert_eq!(position.quantity_on_hand, 50);
+        assert_eq!(position.quantity_reserved, 0);
+        assert_eq!(position.quantity_available, 50);
+        assert_eq!(position.status, "available");
+
+        // Verify movement recorded
+        let movement: InventoryMovementRecord =
+            sqlx::query_as("SELECT * FROM inventory_movements WHERE sku = ? AND reason = 'receipt'")
+                .bind("TEST-RECV-001")
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+
+        assert_eq!(movement.quantity, 50);
+        assert_eq!(movement.reason, "receipt");
+        assert_eq!(movement.to_location_id, Some(location_id));
+    }
+
+    #[tokio::test]
+    async fn test_receive_inventory_existing_position() {
+        let (pool, service) = setup_test_service().await;
+        let location_id = Uuid::new_v4().to_string();
+
+        create_test_item_and_location(&pool, "TEST-RECV-002", &location_id).await;
+        create_initial_inventory(&pool, "TEST-RECV-002", &location_id, 100).await;
+
+        let result = service
+            .receive_inventory("TEST-RECV-002", &location_id, 25, "operator1", Some("RECV-002".to_string()))
+            .await;
+
+        assert!(result.is_ok());
+
+        // Verify position updated
+        let position: InventoryPositionRecord =
+            sqlx::query_as("SELECT * FROM inventory_positions WHERE sku = ? AND location_id = ?")
+                .bind("TEST-RECV-002")
+                .bind(&location_id)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+
+        assert_eq!(position.quantity_on_hand, 125); // 100 + 25
+        assert_eq!(position.quantity_available, 125);
+    }
+
+    #[tokio::test]
+    async fn test_receive_inventory_with_reserved() {
+        let (pool, service) = setup_test_service().await;
+        let location_id = Uuid::new_v4().to_string();
+
+        create_test_item_and_location(&pool, "TEST-RECV-003", &location_id).await;
+        create_initial_inventory(&pool, "TEST-RECV-003", &location_id, 100).await;
+
+        // Reserve some inventory first
+        service
+            .reserve_inventory("TEST-RECV-003", &location_id, 30, "user1", None)
+            .await
+            .unwrap();
+
+        // Receive more inventory
+        let result = service
+            .receive_inventory("TEST-RECV-003", &location_id, 50, "operator1", Some("RECV-003".to_string()))
+            .await;
+
+        assert!(result.is_ok());
+
+        // Verify position updated correctly
+        let position: InventoryPositionRecord =
+            sqlx::query_as("SELECT * FROM inventory_positions WHERE sku = ? AND location_id = ?")
+                .bind("TEST-RECV-003")
+                .bind(&location_id)
+                .fetch_one(&pool)
+                .await
+                .unwrap();
+
+        assert_eq!(position.quantity_on_hand, 150); // 100 + 50
+        assert_eq!(position.quantity_reserved, 30);
+        assert_eq!(position.quantity_available, 120); // 150 - 30
+    }
+
+    #[tokio::test]
+    async fn test_receive_inventory_zero_quantity_fails() {
+        let (pool, service) = setup_test_service().await;
+        let location_id = Uuid::new_v4().to_string();
+
+        create_test_item_and_location(&pool, "TEST-RECV-004", &location_id).await;
+
+        let result = service
+            .receive_inventory("TEST-RECV-004", &location_id, 0, "operator1", None)
+            .await;
+
+        assert!(result.is_err());
     }
 
     #[tokio::test]

@@ -6,6 +6,7 @@ use crate::error::{PersistenceError, Result};
 use serde::Deserialize;
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
 use sqlx::SqlitePool;
+use std::env;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -47,6 +48,35 @@ impl Default for DbPoolConfig {
     }
 }
 
+impl DbPoolConfig {
+    /// Load configuration from environment variables.
+    pub fn load() -> Result<Self> {
+        let mut config = Self::default();
+
+        if let Ok(value) = env::var("APP__DATABASE__URL") {
+            config.database_url = value;
+        }
+
+        if let Ok(value) = env::var("APP__DATABASE__MAX_CONNECTIONS") {
+            config.max_connections = value.parse().map_err(|_| {
+                PersistenceError::Configuration(
+                    "APP__DATABASE__MAX_CONNECTIONS must be a u32".to_string(),
+                )
+            })?;
+        }
+
+        if let Ok(value) = env::var("APP__DATABASE__CONNECTION_TIMEOUT_SECS") {
+            config.connection_timeout_secs = value.parse().map_err(|_| {
+                PersistenceError::Configuration(
+                    "APP__DATABASE__CONNECTION_TIMEOUT_SECS must be a u64".to_string(),
+                )
+            })?;
+        }
+
+        Ok(config)
+    }
+}
+
 /// Database connection pool wrapper.
 #[derive(Debug, Clone)]
 pub struct DbPool {
@@ -84,6 +114,9 @@ impl DbPool {
 mod tests {
     use super::*;
     use tempfile::tempdir;
+    use std::sync::{Mutex, OnceLock};
+
+    static ENV_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
     #[test]
     fn test_default_config() {
@@ -91,6 +124,45 @@ mod tests {
         assert_eq!(config.database_url, "sqlite:data/drone-inventory.db");
         assert_eq!(config.max_connections, 5);
         assert_eq!(config.connection_timeout_secs, 30);
+    }
+
+    #[test]
+    fn test_load_config_from_env() {
+        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+
+        unsafe {
+            env::set_var("APP__DATABASE__URL", "sqlite:/data/inventory.db");
+            env::set_var("APP__DATABASE__MAX_CONNECTIONS", "10");
+            env::set_var("APP__DATABASE__CONNECTION_TIMEOUT_SECS", "45");
+        }
+
+        let config = DbPoolConfig::load().unwrap();
+
+        assert_eq!(config.database_url, "sqlite:/data/inventory.db");
+        assert_eq!(config.max_connections, 10);
+        assert_eq!(config.connection_timeout_secs, 45);
+
+        unsafe {
+            env::remove_var("APP__DATABASE__URL");
+            env::remove_var("APP__DATABASE__MAX_CONNECTIONS");
+            env::remove_var("APP__DATABASE__CONNECTION_TIMEOUT_SECS");
+        }
+    }
+
+    #[test]
+    fn test_load_config_rejects_invalid_numbers() {
+        let _guard = ENV_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap();
+
+        unsafe {
+            env::set_var("APP__DATABASE__MAX_CONNECTIONS", "not-a-number");
+        }
+
+        let result = DbPoolConfig::load();
+        assert!(result.is_err());
+
+        unsafe {
+            env::remove_var("APP__DATABASE__MAX_CONNECTIONS");
+        }
     }
 
     #[tokio::test]

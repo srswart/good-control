@@ -1,0 +1,30 @@
+[package]
+name = "inventory-server"
+description = "Backend GraphQL server for drone inventory management"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "inventory-server"
+path = "src/main.rs"
+
+[dependencies]
+# Internal crates
+foundation = { workspace = true }
+server = { workspace = true }
+persistence = { workspace = true }
+graphql = { workspace = true }
+auth = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true }
+
+# Web framework
+axum = { workspace = true }
+tower-http = { workspace = true }
+
+# Logging/Tracing
+tracing = { workspace = true }
+

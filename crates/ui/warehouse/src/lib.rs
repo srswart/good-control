@@ -14,8 +14,8 @@ pub mod pick;
 pub mod pack;
 pub mod ship;
 
-pub use receiving::ReceivingView;
+pub use receiving::{ReceivingView, ScanReceiving};
 pub use putaway::PutawayView;
-pub use pick::PickView;
-pub use pack::PackView;
-pub use ship::ShipView;
+pub use pick::{PickView, ScanPicking};
+pub use pack::{PackView, ScanPacking};
+pub use ship::{ShipView, ScanShipping};

@@ -1,0 +1,51 @@
+# ARRIVE Evidence Scan configuration
+# Used by scripts/arrive_evidence_scan.rb to evaluate component promotion readiness.
+evidence_scan:
+  version: 1
+  output_dir: "output/arrive/evidence"
+  systems:
+    - backend
+    - frontend
+    - cli
+
+  security_scan:
+    required: true
+    report_paths:
+      - "output/security/**/*.md"
+      - "output/security/**/*.json"
+
+  # Whether evidence links are enforced as a promotion gate.
+  # System policy can still require evidence links; enforcement can be toggled here.
+  enforce_evidence_links: false
+
+  # Default promotion rules. Systems can override below.
+  promotion_rules:
+    incubating:
+      next_stage: candidate
+      min_completed_advances: 1
+      required_evidence_types:
+        - tests:unit
+        - tdd:red-green
+    candidate:
+      next_stage: resident
+      min_completed_advances: 2
+      required_evidence_types:
+        - tests:integration
+        - ci:passed
+        - review:owner
+
+  systems_overrides:
+    frontend:
+      promotion_rules:
+        candidate:
+          required_evidence_types:
+            - tests:unit
+            - ci:passed
+            - review:owner
+    cli:
+      promotion_rules:
+        candidate:
+          required_evidence_types:
+            - tests:unit
+            - ci:passed
+            - review:owner

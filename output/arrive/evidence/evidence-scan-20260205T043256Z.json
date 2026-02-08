@@ -1,0 +1,1378 @@
+{
+  "generated_at": "2026-02-05T04:32:56Z",
+  "config": {
+    "path": "arrive/evidence_scan.yaml",
+    "output_dir": "output/arrive/evidence"
+  },
+  "systems": [
+    {
+      "id": "backend",
+      "require_evidence_links": true,
+      "components": [
+        {
+          "component": {
+            "id": "assets",
+            "name": "Drone asset registry + configuration control",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/assets.yaml"
+          },
+          "related_advances": [
+            "ADV-ASSET-001",
+            "ADV-ASSET-002",
+            "ADV-BATT-002"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "auth",
+            "name": "AuthN/AuthZ + RBAC + audit hooks",
+            "type": "crosscutting",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/auth.yaml"
+          },
+          "related_advances": [
+            "ADV-AUTH-001"
+          ],
+          "completed_advances": [
+            "ADV-AUTH-001"
+          ],
+          "evidence_types": [
+            "database:migration",
+            "tdd:red-green",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+            "database:migration"
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "battery",
+            "name": "Battery lifecycle (health, cycles, states, retirement)",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/battery.yaml"
+          },
+          "related_advances": [
+            "ADV-BATT-001",
+            "ADV-BATT-002"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "compliance",
+            "name": "Jurisdiction rules + approvals + document packs + gating",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/compliance.yaml"
+          },
+          "related_advances": [
+            "ADV-COMP-001",
+            "ADV-COMP-002",
+            "ADV-COMP-003",
+            "ADV-COMP-004",
+            "ADV-PROC-003",
+            "ADV-WMS-005"
+          ],
+          "completed_advances": [
+            "ADV-WMS-005"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:integration",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "foundation",
+            "name": "Backend Foundation (workspace, Axum server, config, tracing)",
+            "type": "infra",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/foundation.yaml"
+          },
+          "related_advances": [
+            "ADV-BACKEND-001"
+          ],
+          "completed_advances": [
+            "ADV-BACKEND-001"
+          ],
+          "evidence_types": [
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "graphql",
+            "name": "GraphQL schema + resolvers (API surface)",
+            "type": "service",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/graphql.yaml"
+          },
+          "related_advances": [
+            "ADV-COMP-003",
+            "ADV-GQL-001",
+            "ADV-GQL-002",
+            "ADV-GQL-003",
+            "ADV-GQL-004",
+            "ADV-GQL-005",
+            "ADV-INV-003",
+            "ADV-INV-005"
+          ],
+          "completed_advances": [
+            "ADV-GQL-001",
+            "ADV-GQL-002",
+            "ADV-GQL-003",
+            "ADV-INV-003",
+            "ADV-INV-005"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:integration",
+            "tests:unit",
+            "tidy:preparatory"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "i18n",
+            "name": "Localization support (EN+ZH) for master data + documents",
+            "type": "crosscutting",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/i18n.yaml"
+          },
+          "related_advances": [
+            "ADV-I18N-001"
+          ],
+          "completed_advances": [
+            "ADV-I18N-001"
+          ],
+          "evidence_types": [
+            "tdd:red-green",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "integration-kingdee",
+            "name": "Kingdee Cloud financial integration connector + reconciliation",
+            "type": "service",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/integration-kingdee.yaml"
+          },
+          "related_advances": [
+            "ADV-KDC-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "inventory",
+            "name": "Inventory ledger, reservations, serial/lot traceability",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/inventory.yaml"
+          },
+          "related_advances": [
+            "ADV-ASSET-002",
+            "ADV-BATT-002",
+            "ADV-COMP-004",
+            "ADV-GQL-004",
+            "ADV-INV-001",
+            "ADV-INV-002",
+            "ADV-INV-003",
+            "ADV-INV-004",
+            "ADV-INV-005",
+            "ADV-ORD-002",
+            "ADV-PERSIST-002",
+            "ADV-PROC-002",
+            "ADV-WMS-002",
+            "ADV-WMS-003",
+            "ADV-WMS-004"
+          ],
+          "completed_advances": [
+            "ADV-INV-001",
+            "ADV-INV-002",
+            "ADV-INV-003",
+            "ADV-INV-004",
+            "ADV-INV-005",
+            "ADV-PERSIST-002",
+            "ADV-WMS-004"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:integration",
+            "tests:unit",
+            "tidy:preparatory"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "logistics",
+            "name": "Logistics + shipment tracking + 3PL abstractions",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/logistics.yaml"
+          },
+          "related_advances": [
+            "ADV-LOG-001",
+            "ADV-WMS-005"
+          ],
+          "completed_advances": [
+            "ADV-LOG-001",
+            "ADV-WMS-005"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:integration",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "mro",
+            "name": "Maintenance/repair/returns (RMA/work orders)",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/mro.yaml"
+          },
+          "related_advances": [
+            "ADV-MRO-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "orders",
+            "name": "Orders, allocation, fulfillment, backorders",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/orders.yaml"
+          },
+          "related_advances": [
+            "ADV-ORD-001",
+            "ADV-ORD-002",
+            "ADV-ORD-003",
+            "ADV-WMS-004"
+          ],
+          "completed_advances": [
+            "ADV-WMS-004"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:integration",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "persistence",
+            "name": "SQLx + SQLite persistence, migrations, repositories",
+            "type": "infra",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/persistence.yaml"
+          },
+          "related_advances": [
+            "ADV-DB-001",
+            "ADV-GQL-004",
+            "ADV-GQL-005",
+            "ADV-INV-002",
+            "ADV-INV-003",
+            "ADV-INV-004",
+            "ADV-INV-005",
+            "ADV-PERSIST-002"
+          ],
+          "completed_advances": [
+            "ADV-DB-001",
+            "ADV-INV-002",
+            "ADV-INV-003",
+            "ADV-INV-004",
+            "ADV-INV-005",
+            "ADV-PERSIST-002"
+          ],
+          "evidence_types": [
+            "tdd:red-green",
+            "tests:integration",
+            "tests:unit",
+            "tidy:preparatory"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "procurement",
+            "name": "Procurement + suppliers + inbound docs",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/procurement.yaml"
+          },
+          "related_advances": [
+            "ADV-PROC-001",
+            "ADV-PROC-002",
+            "ADV-PROC-003"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "reporting",
+            "name": "Reporting + analytics queries + export primitives",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/reporting.yaml"
+          },
+          "related_advances": [
+            "ADV-RPT-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "warehouse",
+            "name": "Warehouse operations (receiving/putaway/pick/pack/ship)",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/backend/components/warehouse.yaml"
+          },
+          "related_advances": [
+            "ADV-COMP-004",
+            "ADV-GQL-005",
+            "ADV-ORD-003",
+            "ADV-PROC-002",
+            "ADV-WMS-001",
+            "ADV-WMS-002",
+            "ADV-WMS-003",
+            "ADV-WMS-004",
+            "ADV-WMS-005"
+          ],
+          "completed_advances": [
+            "ADV-WMS-004",
+            "ADV-WMS-005"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:integration",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "frontend",
+      "require_evidence_links": true,
+      "components": [
+        {
+          "component": {
+            "id": "app-shell",
+            "name": "App shell (routing, session, navigation, permissions)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/app-shell.yaml"
+          },
+          "related_advances": [
+            "ADV-SHELL-001"
+          ],
+          "completed_advances": [
+            "ADV-SHELL-001"
+          ],
+          "evidence_types": [
+            "tdd:red-green",
+            "tests:unit",
+            "tidy:preparatory"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "assets-ui",
+            "name": "Assets UI (drones + batteries lifecycle views)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/assets-ui.yaml"
+          },
+          "related_advances": [
+            "ADV-ASSETUI-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "compliance-ui",
+            "name": "Compliance UI (approvals, doc packs, blocking reasons)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/compliance-ui.yaml"
+          },
+          "related_advances": [
+            "ADV-COMPUI-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "design-system",
+            "name": "Design system (reusable components, forms, validation)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/design-system.yaml"
+          },
+          "related_advances": [
+            "ADV-DS-001"
+          ],
+          "completed_advances": [
+            "ADV-DS-001"
+          ],
+          "evidence_types": [
+            "tdd:red-green",
+            "tests:unit",
+            "tidy:preparatory"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "foundation",
+            "name": "Frontend Foundation (Dioxus 0.7.x, Tailwind pipeline, desktop packaging)",
+            "type": "infra",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/foundation.yaml"
+          },
+          "related_advances": [
+            "ADV-FE-001",
+            "ADV-FE-002",
+            "ADV-FE-MOBILE-001",
+            "ADV-INVUI-002",
+            "ADV-LOGUI-002",
+            "ADV-WMSUI-002",
+            "ADV-WMSUI-003"
+          ],
+          "completed_advances": [
+            "ADV-FE-001",
+            "ADV-FE-002",
+            "ADV-INVUI-002",
+            "ADV-WMSUI-002",
+            "ADV-WMSUI-003"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:unit",
+            "tidy:preparatory"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "i18n",
+            "name": "Frontend i18n (EN+ZH), language switching, fonts, locale formats",
+            "type": "crosscutting",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/i18n.yaml"
+          },
+          "related_advances": [
+            "ADV-I18N-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "integration-ui",
+            "name": "Integration UI (Kingdee mapping, sync status, errors)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/integration-ui.yaml"
+          },
+          "related_advances": [
+            "ADV-INTUI-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "inventory-ui",
+            "name": "Inventory UI (items, stock, traceability, cycle counts)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/inventory-ui.yaml"
+          },
+          "related_advances": [
+            "ADV-FE-002",
+            "ADV-INVUI-001",
+            "ADV-INVUI-002",
+            "ADV-UITEST-006"
+          ],
+          "completed_advances": [
+            "ADV-FE-002",
+            "ADV-INVUI-002",
+            "ADV-UITEST-006"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "logistics-ui",
+            "name": "Logistics UI (shipments, tracking, cross-border pack review)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/logistics-ui.yaml"
+          },
+          "related_advances": [
+            "ADV-LOGUI-001",
+            "ADV-LOGUI-002"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "procurement-orders-ui",
+            "name": "Procurement + Orders UI (POs, allocations, fulfillment)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/procurement-orders-ui.yaml"
+          },
+          "related_advances": [
+            "ADV-POUI-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "reporting-ui",
+            "name": "Reporting UI (dashboards, exports)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/reporting-ui.yaml"
+          },
+          "related_advances": [
+            "ADV-RPTUI-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "ui-automation",
+            "name": "UI Automation Testing (Playwright + Dioxus Web)",
+            "type": "crosscutting",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/ui-automation.yaml"
+          },
+          "related_advances": [
+            "ADV-UITEST-006"
+          ],
+          "completed_advances": [
+            "ADV-UITEST-006"
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "warehouse-ui",
+            "name": "Warehouse UI (receiving, putaway, pick/pack/ship; scan-first)",
+            "type": "ui-area",
+            "stage": "incubating",
+            "path": "arrive/systems/frontend/components/warehouse-ui.yaml"
+          },
+          "related_advances": [
+            "ADV-FE-MOBILE-001",
+            "ADV-WMSUI-001",
+            "ADV-WMSUI-002",
+            "ADV-WMSUI-003"
+          ],
+          "completed_advances": [
+            "ADV-WMSUI-002",
+            "ADV-WMSUI-003"
+          ],
+          "evidence_types": [
+            "ci:passed",
+            "tdd:red-green",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cli",
+      "require_evidence_links": true,
+      "components": [
+        {
+          "component": {
+            "id": "compliance-tools",
+            "name": "Compliance tooling (validate gates, build document packs)",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/cli/components/compliance-tools.yaml"
+          },
+          "related_advances": [
+            "ADV-COMP-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "db-migrations",
+            "name": "DB migrations + backup/restore (SQLite)",
+            "type": "infra",
+            "stage": "incubating",
+            "path": "arrive/systems/cli/components/db-migrations.yaml"
+          },
+          "related_advances": [
+            "ADV-MIG-001"
+          ],
+          "completed_advances": [
+            "ADV-MIG-001"
+          ],
+          "evidence_types": [
+            "tdd:red-green",
+            "tests:integration",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "export-report",
+            "name": "Export tools (reports, audit extracts, data dumps)",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/cli/components/export-report.yaml"
+          },
+          "related_advances": [
+            "ADV-EXPORT-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "foundation",
+            "name": "CLI Foundation (clap, config, logging, subcommand scaffolding)",
+            "type": "infra",
+            "stage": "incubating",
+            "path": "arrive/systems/cli/components/foundation.yaml"
+          },
+          "related_advances": [
+            "ADV-CLI-001"
+          ],
+          "completed_advances": [
+            "ADV-CLI-001"
+          ],
+          "evidence_types": [
+            "tdd:red-green",
+            "tests:unit"
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "kingdee-sync",
+            "name": "Kingdee sync tooling (trigger/retry/reconcile)",
+            "type": "service",
+            "stage": "incubating",
+            "path": "arrive/systems/cli/components/kingdee-sync.yaml"
+          },
+          "related_advances": [
+            "ADV-KDC-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "ops-diagnostics",
+            "name": "Ops diagnostics (health checks, DB integrity, tracing toggles)",
+            "type": "crosscutting",
+            "stage": "incubating",
+            "path": "arrive/systems/cli/components/ops-diagnostics.yaml"
+          },
+          "related_advances": [
+            "ADV-OPS-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        },
+        {
+          "component": {
+            "id": "seed-import",
+            "name": "Seed + import tools (CSV/JSON) for master data and inventory",
+            "type": "library",
+            "stage": "incubating",
+            "path": "arrive/systems/cli/components/seed-import.yaml"
+          },
+          "related_advances": [
+            "ADV-SEED-001"
+          ],
+          "completed_advances": [
+
+          ],
+          "evidence_types": [
+
+          ],
+          "unknown_evidence_types": [
+
+          ],
+          "promotion": {
+            "eligible": false,
+            "next_stage": null,
+            "missing_requirements": [
+
+            ],
+            "missing_evidence_types": [
+
+            ],
+            "missing_evidence_links": [
+
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

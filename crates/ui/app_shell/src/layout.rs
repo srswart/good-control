@@ -1,12 +1,17 @@
 //! App shell layout component
 
 use dioxus::prelude::*;
-use crate::nav::Navigation;
+use crate::nav::{Navigation, nav_items_for_session};
 use crate::routes::Route;
+use crate::session::use_session;
 use crate::LayoutContext;
 use crate::LanguageSwitcher;
 use crate::language::use_locale;
 use crate::i18n::t;
+use crate::logo::{Logo, LogoSize};
+use crate::brand::BrandColors;
+use crate::login::PasskeyRegisterButton;
+use ui_foundation::graphql::auth_token::set_auth_token;
 
 /// App shell layout component
 /// 
@@ -14,10 +19,24 @@ use crate::i18n::t;
 /// This component is used as a layout route in the router.
 #[component]
 pub fn AppLayout() -> Element {
+    let mut session_signal = use_session();
+    let session = session_signal.read();
+    let navigator = dioxus_router::use_navigator();
+    let current_route = dioxus_router::use_route::<Route>();
+
+    use_effect(move || {
+        if !session_signal.read().is_authenticated {
+            navigator.push(Route::Login {});
+        }
+    });
+
     // Get layout context from AppShell
     let context_signal = use_context::<Signal<LayoutContext>>();
     let ctx = context_signal.read();
-    let items = ctx.nav_items.clone().unwrap_or_else(crate::nav::default_nav_items);
+    let items = ctx
+        .nav_items
+        .clone()
+        .unwrap_or_else(|| nav_items_for_session(&session));
     let header_content = ctx.header_content.clone();
     let sidebar_footer = ctx.sidebar_footer.clone();
     
@@ -31,27 +50,37 @@ pub fn AppLayout() -> Element {
             style: "margin: 0; padding: 0; width: 100%;",
             // Header
             header {
-                class: "bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-lg border-b-2 border-gray-700",
+                class: "text-white shadow-lg border-b-2",
+                style: format!("background: linear-gradient(135deg, {} 0%, {} 100%); border-color: {};",
+                    BrandColors::NAVY, BrandColors::NAVY_LIGHT, BrandColors::CORAL),
                 div {
                     class: "max-w-full mx-auto px-6 sm:px-8 lg:px-10 py-5",
                     div {
                         class: "flex justify-between items-center",
                         div {
-                            class: "flex items-center space-x-3",
-                            div {
-                                class: "w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-md",
-                                span {
-                                    class: "text-white font-bold text-lg",
-                                    "GC"
-                                }
-                            }
-                            h1 {
-                                class: "text-2xl font-bold text-white tracking-tight",
-                                {t(current_locale, "app_title")}
+                            class: "flex items-center space-x-4",
+                            Logo {
+                                size: LogoSize::Medium,
+                                show_stripes: true,
                             }
                         }
-                        if let Some(content) = header_content {
-                            {content}
+                        div {
+                            class: "flex items-center space-x-3",
+                            if let Some(content) = header_content {
+                                {content}
+                            }
+                            if session.is_authenticated {
+                                PasskeyRegisterButton {}
+                                button {
+                                    class: "text-xs text-white bg-rose-600 rounded px-3 py-2",
+                                    onclick: move |_| {
+                                        session_signal.write().clear();
+                                        set_auth_token(None);
+                                        navigator.push(Route::Login {});
+                                    },
+                                    "Logout"
+                                }
+                            }
                         }
                     }
                 }
@@ -63,8 +92,9 @@ pub fn AppLayout() -> Element {
                 style: "display: flex; flex-direction: row; margin: 0; padding: 0; width: 100%;",
                 // Sidebar navigation - vertical menu on left side
                 aside {
-                    class: "w-64 bg-white border-r-2 border-gray-300 flex-shrink-0 flex flex-col",
-                    style: "width: 16rem; min-width: 16rem; max-width: 16rem; display: flex; flex-direction: column; background-color: white; padding: 0; margin: 0; position: relative; left: 0;",
+                    class: "w-64 border-r-2 flex-shrink-0 flex flex-col",
+                    style: format!("width: 16rem; min-width: 16rem; max-width: 16rem; display: flex; flex-direction: column; background-color: {}; border-color: {}; padding: 0; margin: 0; position: relative; left: 0;",
+                        BrandColors::NAVY, BrandColors::CORAL),
                     div {
                         class: "flex-1 overflow-y-auto",
                         div {
@@ -75,8 +105,8 @@ pub fn AppLayout() -> Element {
                                 LanguageSwitcher {}
                             }
                             h2 {
-                                class: "text-xs font-semibold uppercase tracking-wider text-gray-500 mb-4",
-                                style: "padding-left: 1rem; padding-right: 1rem;",
+                                class: "text-xs font-semibold uppercase tracking-wider mb-4",
+                                style: format!("padding-left: 1rem; padding-right: 1rem; color: {};", BrandColors::MINT),
                                 {t(current_locale, "navigation")}
                             }
                             Navigation {
@@ -87,8 +117,8 @@ pub fn AppLayout() -> Element {
                     // Footer area at bottom of sidebar
                     if let Some(footer) = sidebar_footer {
                         div {
-                            class: "mt-auto pt-4 pb-4 flex justify-center",
-                            style: "padding-left: 0; padding-right: 0;",
+                            class: "mt-auto pt-4 pb-4 flex justify-center border-t",
+                            style: format!("padding-left: 0; padding-right: 0; border-color: {};", BrandColors::NAVY_LIGHT),
                             {footer}
                         }
                     }
@@ -101,7 +131,15 @@ pub fn AppLayout() -> Element {
                     div {
                         class: "max-w-7xl mx-auto px-6 sm:px-8 lg:px-10",
                         style: "padding-top: 2rem; padding-bottom: 2rem;",
-                        dioxus_router::Outlet::<Route> {}
+                        if session.can_access_route(&current_route) {
+                            dioxus_router::Outlet::<Route> {}
+                        } else {
+                            div {
+                                class: "bg-white rounded-lg shadow p-8 text-center",
+                                h2 { class: "text-xl font-semibold text-gray-800 mb-2", "Access denied" }
+                                p { class: "text-gray-600", "You do not have permission to view this module." }
+                            }
+                        }
                     }
                 }
             }

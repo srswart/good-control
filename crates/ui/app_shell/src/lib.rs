@@ -13,15 +13,23 @@ use shared::i18n::SupportedLocale;
 pub mod routes;
 pub mod nav;
 pub mod session;
+pub mod passkey_web;
+pub mod login;
 pub mod layout;
 pub mod language;
 pub mod i18n;
+pub mod brand;
+pub mod logo;
 
 pub use routes::Route;
-pub use nav::{Navigation, NavItem, default_nav_items};
+pub use nav::{Navigation, NavItem, default_nav_items, nav_items_for_session};
 pub use session::{Session, SessionProvider, use_session};
+pub use passkey_web::{webauthn_authenticate, webauthn_register};
+pub use login::{LoginView, PasskeyRegisterButton};
 pub use layout::AppLayout;
 pub use language::LanguageSwitcher;
+pub use logo::{Logo, LogoIcon, LogoSize};
+pub use brand::BrandColors;
 
 /// App shell component that initializes Router and Session
 /// 
