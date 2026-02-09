@@ -17,3 +17,6 @@ Cargo.lock
 
 /target
 
+# Deployment configs kept local
+/apps/*/fly.toml
+
