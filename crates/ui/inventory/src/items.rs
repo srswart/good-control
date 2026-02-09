@@ -70,6 +70,8 @@ pub fn ItemsList() -> Element {
     let mut error = use_signal(|| None::<String>);
     let mut search_query = use_signal(|| String::new());
     let mut cursor = use_signal(|| None::<String>);
+    let mut cursor_stack = use_signal(|| Vec::<Option<String>>::new());
+    let mut current_after = use_signal(|| None::<String>);
     let mut has_next_page = use_signal(|| false);
     let mut has_previous_page = use_signal(|| false);
     let mut total_count = use_signal(|| 0);
@@ -92,7 +94,7 @@ pub fn ItemsList() -> Element {
                     format!(
                         r#"
                         query {{
-                            items(search: "{}", pagination: {{ first: 20, after: "{}" }}) {{
+                            items(search: "{}", pagination: {{ first: 10, after: "{}" }}) {{
                                 edges {{
                                     node {{
                                         sku
@@ -119,7 +121,7 @@ pub fn ItemsList() -> Element {
                     format!(
                         r#"
                         query {{
-                            items(search: "{}", pagination: {{ first: 20 }}) {{
+                            items(search: "{}", pagination: {{ first: 10 }}) {{
                                 edges {{
                                     node {{
                                         sku
@@ -148,7 +150,7 @@ pub fn ItemsList() -> Element {
                 format!(
                     r#"
                     query {{
-                        items(pagination: {{ first: 20, after: "{}" }}) {{
+                        items(pagination: {{ first: 10, after: "{}" }}) {{
                             edges {{
                                 node {{
                                     sku
@@ -175,7 +177,7 @@ pub fn ItemsList() -> Element {
                 // No search, no pagination
                 r#"
                 query {
-                    items(pagination: { first: 20 }) {
+                    items(pagination: { first: 10 }) {
                         edges {
                             node {
                                 sku
@@ -262,10 +264,46 @@ pub fn ItemsList() -> Element {
         });
     };
 
+    let on_search_submit = {
+        let mut cursor_stack = cursor_stack.clone();
+        let mut current_after = current_after.clone();
+        move |_| {
+            cursor_stack.set(Vec::new());
+            current_after.set(None);
+            fetch_items(None);
+        }
+    };
+    let on_retry = {
+        let mut cursor_stack = cursor_stack.clone();
+        let mut current_after = current_after.clone();
+        move |_| {
+            cursor_stack.set(Vec::new());
+            current_after.set(None);
+            fetch_items(None);
+        }
+    };
+    let on_search_keypress = {
+        let mut cursor_stack = cursor_stack.clone();
+        let mut current_after = current_after.clone();
+        move |evt: KeyboardEvent| {
+            if evt.key() == Key::Enter {
+                cursor_stack.set(Vec::new());
+                current_after.set(None);
+                fetch_items(None);
+            }
+        }
+    };
+
     // Load items on mount
-    use_effect(move || {
-        fetch_items(None);
-    });
+    {
+        let mut cursor_stack = cursor_stack.clone();
+        let mut current_after = current_after.clone();
+        use_effect(move || {
+            cursor_stack.set(Vec::new());
+            current_after.set(None);
+            fetch_items(None);
+        });
+    }
 
     rsx! {
         div {
@@ -294,18 +332,12 @@ pub fn ItemsList() -> Element {
                         oninput: move |evt| {
                             search_query.set(evt.value().clone());
                         },
-                        onkeypress: move |evt| {
-                            if evt.key() == Key::Enter {
-                                fetch_items(None);
-                            }
-                        }
+                        onkeypress: on_search_keypress,
                     }
                     button {
                         class: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400",
                         disabled: loading(),
-                        onclick: move |_| {
-                            fetch_items(None);
-                        },
+                        onclick: on_search_submit,
                         {t(locale, "search")}
                     }
                 }
@@ -335,9 +367,7 @@ pub fn ItemsList() -> Element {
                     }
                     button {
                         class: "mt-2 text-sm text-red-600 hover:text-red-800 underline",
-                        onclick: move |_| {
-                            fetch_items(None);
-                        },
+                        onclick: on_retry,
                         {t(locale, "retry")}
                     }
                 }
@@ -388,11 +418,14 @@ pub fn ItemsList() -> Element {
                     }
                     div {
                         class: "flex gap-2",
-                        button {
+                button {
                             class: "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400",
                             disabled: !has_previous_page() || loading(),
                             onclick: move |_| {
-                                // TODO: Implement previous page navigation
+                        let mut stack = cursor_stack.write();
+                        let previous_after = stack.pop().flatten();
+                        current_after.set(previous_after.clone());
+                        fetch_items(previous_after);
                             },
                             {t(locale, "previous")}
                         }
@@ -400,8 +433,11 @@ pub fn ItemsList() -> Element {
                             class: "px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400",
                             disabled: !has_next_page() || loading(),
                             onclick: move |_| {
-                                if let Some(end_cursor) = cursor() {
-                                    fetch_items(Some(end_cursor));
+                        if let Some(end_cursor) = cursor() {
+                            let mut stack = cursor_stack.write();
+                            stack.push(current_after());
+                            current_after.set(Some(end_cursor.clone()));
+                            fetch_items(Some(end_cursor));
                                 }
                             },
                             {t(locale, "next")}

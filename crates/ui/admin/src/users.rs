@@ -366,7 +366,7 @@ pub fn AdminUsersView() -> Element {
                 h2 { class: "text-lg font-semibold text-gray-900", "Mock Data" }
                 p { class: "text-sm text-gray-600", "Reloading mock data will delete current inventory and task data before reseeding." }
                 button {
-                    class: "px-4 py-2 bg-amber-600 text-white rounded-md text-sm hover:bg-amber-700 disabled:bg-amber-300",
+                    class: "px-4 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:bg-blue-300",
                     onclick: on_reload_mock_data,
                     disabled: mock_data_loading(),
                     if mock_data_loading() { "Reloading..." } else { "Reload mock data" }

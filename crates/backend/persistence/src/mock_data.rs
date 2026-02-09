@@ -33,12 +33,14 @@ pub async fn reload_mock_data(pool: &DbPool) -> Result<MockDataSummary> {
 }
 
 async fn clear_inventory_data(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>) -> Result<()> {
+    drop_inventory_triggers(tx).await?;
     sqlx::query("DELETE FROM inventory_movements").execute(tx.as_mut()).await?;
     sqlx::query("DELETE FROM inventory_positions").execute(tx.as_mut()).await?;
     sqlx::query("DELETE FROM serial_units").execute(tx.as_mut()).await?;
     sqlx::query("DELETE FROM lots").execute(tx.as_mut()).await?;
     sqlx::query("DELETE FROM items").execute(tx.as_mut()).await?;
     sqlx::query("DELETE FROM locations").execute(tx.as_mut()).await?;
+    create_inventory_triggers(tx).await?;
     Ok(())
 }
 
@@ -209,4 +211,36 @@ async fn count_rows(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>, table: &str) -
         .fetch_one(tx.as_mut())
         .await?;
     Ok(count)
+}
+
+async fn drop_inventory_triggers(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>) -> Result<()> {
+    sqlx::query("DROP TRIGGER IF EXISTS prevent_movement_updates")
+        .execute(tx.as_mut())
+        .await?;
+    sqlx::query("DROP TRIGGER IF EXISTS prevent_movement_deletes")
+        .execute(tx.as_mut())
+        .await?;
+    Ok(())
+}
+
+async fn create_inventory_triggers(tx: &mut sqlx::Transaction<'_, sqlx::Sqlite>) -> Result<()> {
+    sqlx::query(
+        "CREATE TRIGGER IF NOT EXISTS prevent_movement_updates
+         BEFORE UPDATE ON inventory_movements
+         BEGIN
+             SELECT RAISE(ABORT, 'Inventory movements are append-only and cannot be updated');
+         END;"
+    )
+    .execute(tx.as_mut())
+    .await?;
+    sqlx::query(
+        "CREATE TRIGGER IF NOT EXISTS prevent_movement_deletes
+         BEFORE DELETE ON inventory_movements
+         BEGIN
+             SELECT RAISE(ABORT, 'Inventory movements are append-only and cannot be deleted');
+         END;"
+    )
+    .execute(tx.as_mut())
+    .await?;
+    Ok(())
 }
