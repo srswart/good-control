@@ -1,6 +1,6 @@
 # Good Control Inventory
 
-Good Control is a Rust workspace that provides a backend API and a Dioxus-based frontend for inventory, warehouse, logistics, procurement, and compliance workflows.
+Good Control is an application that provides a backend API and a Dioxus-based frontend for inventory, warehouse, logistics, procurement, and compliance workflows.  The project is meant to be a proving ground for the ARRIVE process. 
 
 ## What is in this repo
 
