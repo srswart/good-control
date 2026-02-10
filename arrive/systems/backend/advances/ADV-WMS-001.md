@@ -6,12 +6,12 @@ advance:
   primary_component: "warehouse"
   components: ["warehouse"]
   started_at: "2026-01-25T08:00:00Z"
-  implementation_completed_at: ~
+  implementation_completed_at: "2026-02-08T19:10:00Z"
   pr_links: []
-  reviewability_score: 0
+  reviewability_score: 18
   risk_flags: []
   evidence: []
-  status: planned
+  status: complete
 ---
 
 ## Objective
@@ -25,9 +25,9 @@ After this advance:
 
 ## Planned Implementation Tasks
 
-- [ ] tidy: preparatory refactoring (no behavior change)
-- [ ] test: add/adjust tests describing expected behavior
-- [ ] feat/fix: implement minimal changes to pass tests
+- [x] tidy: preparatory refactoring (no behavior change)
+- [x] test: add/adjust tests describing expected behavior
+- [x] feat/fix: implement minimal changes to pass tests
 
 ## Risk + Rollback
 
@@ -36,9 +36,20 @@ After this advance:
 
 ## Evidence
 
-- [ ] tidy:preparatory
+- [x] tidy:preparatory
 - [ ] tdd:red-green
-- [ ] tests:unit
+- [x] tests:unit
 - [ ] tests:integration
 - [ ] ci:passed
 - [ ] review:owner
+
+## Changes Made
+
+### 2026-02-08 - feat: warehouse domain foundation
+
+- `crates/domain/warehouse/Cargo.toml`: Warehouse domain crate definition
+- `crates/domain/warehouse/src/lib.rs`: Module exports and component boundary
+- `crates/domain/warehouse/src/receiving.rs`: Receiving task entities and state machine
+- `crates/domain/warehouse/src/picking.rs`: Picking workflow models and transitions
+- `crates/domain/warehouse/src/packing.rs`: Packing workflow models and transitions
+- `crates/domain/warehouse/src/shipping.rs`: Shipping workflow models and transitions
