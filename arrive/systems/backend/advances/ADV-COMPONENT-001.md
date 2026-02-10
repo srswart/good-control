@@ -47,5 +47,7 @@ After this advance:
 - If CI jobs are enabled, link pipeline evidence (`ci:passed`) from PR/MR and default-branch runs.
 - If CI jobs are temporarily disabled, run checks externally before merge:
   - `arrive pr check --strict --json`
-  - `arrive evidence record --advance <ADV-ID> --status success` (include provider/run metadata when available)
+  - `arrive evidence record --advance <ADV-ID> --status passed` (include provider/run metadata when available)
+  - Optional combined flow when provider lookup is available:
+    - `arrive pr check --provider-status --advance <ADV-ID> --record-ci-evidence --json`
 
