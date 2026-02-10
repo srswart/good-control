@@ -33,6 +33,15 @@ Prefer smaller, focused changes:
 4. **Separate interface from implementation** - Public API changes vs internal refactors
 5. **Split by ARRIVE component** - When touching multiple components
 
+## Review-Time Usage
+
+- Treat review-time estimate as a planning signal, not a vanity metric.
+- Use `arrive score` output to decide checkpointing:
+  - Green: proceed, optional split
+  - Yellow: split at natural tidy/test/feat boundaries
+  - Red: split before continuing implementation
+- Track estimated and actual review time in the Advance frontmatter and adjust future split strategy when estimates are consistently off.
+
 ## Test-Driven Development Requirements
 
 For all code changes:

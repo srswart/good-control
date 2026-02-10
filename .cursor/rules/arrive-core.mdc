@@ -36,8 +36,6 @@ Before making changes, determine:
 
 Follow this strict order for all changes:
 
-### 0. Create a branch using the {system}/{advance number}
-
 ### 1. Tidy First (Preparatory Refactoring)
 Before adding new behavior, make the change easy:
 - Separate tidying commits from behavioral changes
@@ -70,6 +68,14 @@ Keep changes within review budget:
 - **Red** (score > 60): Split unless there's documented rationale
 
 Prefer producing one reviewable Advance over one massive "everything" change.
+
+## CI Guidance (Current Operating Mode)
+
+- Treat PR/MR metadata checks as required governance, even when CI jobs are temporarily disabled in pipeline YAML.
+- Run checks externally when pipelines are disabled:
+  - `arrive pr check --strict --json`
+  - `arrive evidence record --advance <ADV-ID> --status success` (with provider/run metadata when available)
+- If pipeline enforcement is re-enabled, keep the same command contract so local/external usage and CI usage stay consistent.
 
 ## Resident Component Requirements
 

@@ -33,19 +33,19 @@ Tidying is preparatory refactoring that makes behavioral changes easier:
 1. **Tidy commits MUST NOT change behavior**
    - All existing tests must pass unchanged
    - No new functionality added
-
+   
 2. **Tidy BEFORE behavioral changes**
    - Don't mix refactoring with features
    - Makes the feature commit smaller and clearer
-
+   
 3. **Small, focused tidy commits**
    - One logical tidying per commit
    - Easy to review, easy to revert
-
+   
 4. **Commit message format**
    ```
    tidy: <what was tidied>
-
+   
    Preparing for: <upcoming change>
    ```
 
@@ -122,9 +122,6 @@ feat: <behavior implemented>
 For a feature "Add user validation":
 
 ```bash
-# 0. Create a branch using the {system}/{advance number}
-
-
 # 1. Tidy First - prepare the ground
 git commit -m "tidy: extract UserInput type from handler"
 git commit -m "tidy: rename validate to validate_format"

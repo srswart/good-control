@@ -19,11 +19,14 @@ Every Advance must capture when work started and when implementation finished:
 ```yaml
 started_at: 2026-01-11T09:00:00Z
 implementation_completed_at: 2026-01-11T09:30:00Z # or ~ if not done yet
+review_time_estimate_minutes: 20
+review_time_actual_minutes: ~
 ```
 
 - **Format**: ISO 8601 / RFC 3339 timestamps (use `Z` / UTC).
 - **Creation**: When an advance is drafted, `started_at` should be set immediately.
 - **Completion**: When implementation is finished (usually when status becomes `complete`), set `implementation_completed_at`.
+- **Review-time**: Keep `review_time_estimate_minutes` current during implementation; set `review_time_actual_minutes` after review.
 
 ### 1. Objective
 What is the goal of this change?
@@ -57,6 +60,10 @@ What validates this change?
 **Other evidence:**
 - `ci:passed` - CI pipeline passed
 - `review:owner` - Owner review completed
+
+When pipeline checks are disabled, record externally-run checks the same way:
+- run `arrive pr check --strict --json` before merge
+- capture provider/run metadata with `arrive evidence record ...`
 
 ## Development Practice Compliance
 
